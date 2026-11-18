@@ -1,0 +1,112 @@
+.gallery { margin-block: var(--section-gap); }
+
+.sectionHeading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin-bottom: clamp(22px, 3.2vw, 46px);
+}
+.sectionHeading > span, .genre {
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--studio-silver);
+}
+.reel {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr 1fr;
+  gap: clamp(14px, 1.6vw, 24px);
+}
+.card { min-width: 0; }
+.frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: clamp(210px, 21vw, 312px);
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--card);
+  cursor: zoom-in;
+}
+.frame img {
+  object-fit: cover;
+  object-position: 73% 50%;
+}
+.card:first-child .frame img { object-position: 80% 50%; }
+.card:last-child .frame img { object-position: 76% 50%; }
+.expand, .close, .arrows button {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 35%);
+  border-radius: 50%;
+  background: var(--studio-glass);
+  color: white;
+  backdrop-filter: blur(12px);
+}
+.expand { position: absolute; bottom: 12px; right: 12px; width: 33px; height: 33px; }
+.frame:hover .expand, .frame:focus-visible .expand { background: var(--studio-ice); color: var(--studio-ink); }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .frame img { transition: transform .45s ease-out; }
+  .frame:hover img { transform: scale(1.035); }
+}
+.caption { padding-top: clamp(14px, 1.8vw, 25px); }
+.genre { display: inline-flex; align-items: center; gap: 8px; }
+.genre::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--genre); }
+.caption h3, .story h2 {
+  margin: 7px 0 10px;
+  font: 640 clamp(22px, 2.25vw, 35px)/1.1 var(--font-display);
+  letter-spacing: -.052em;
+  overflow-wrap: break-word;
+}
+.caption p, .story p {
+  max-width: 47ch;
+  margin: 0;
+  color: var(--studio-silver);
+  font-size: clamp(15px, 1.12vw, 17px);
+  line-height: 1.54;
+}
+
+.backdrop { position: fixed; z-index: 90; inset: 0; background: rgb(0 0 0 / 83%); backdrop-filter: blur(12px); }
+.viewer {
+  position: fixed;
+  z-index: 91;
+  inset: 0;
+  width: min(1120px, calc(100% - 32px));
+  height: fit-content;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--studio-ink);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  color: white;
+}
+.scene { position: relative; width: 100%; aspect-ratio: 2.32; max-height: 53dvh; background: black; }
+.scene img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; }
+.close, .arrows button { width: 44px; height: 44px; padding: 0; }
+.close { position: absolute; z-index: 1; top: 12px; right: 12px; }
+.close:hover, .arrows button:hover { background: var(--studio-ice); color: var(--studio-ink); }
+.details { position: relative; padding: clamp(18px, 2.8vw, 36px); }
+.story { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .83fr); gap: 0 clamp(24px, 5vw, 70px); }
+.story > .genre, .story > h2, .story > p { grid-column: 1; }
+.story .note { grid-column: 2; grid-row: 1 / 4; padding-inline-start: clamp(16px, 2vw, 28px); border-inline-start: 1px solid var(--hairline); }
+.note strong { display: block; margin-bottom: 8px; font-size: 13px; }
+.arrows { display: flex; align-items: center; justify-content: end; gap: 8px; margin-block-start: 18px; }
+.arrows span { margin-inline-end: 5px; color: var(--studio-silver); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 700px) {
+  .sectionHeading { margin-bottom: 21px; }
+  .reel { grid-template-columns: 1fr; gap: 31px; }
+  .frame { height: auto; aspect-ratio: 1.82; }
+  .caption { padding-top: 12px; }
+  .caption h3 { margin-bottom: 6px; font-size: clamp(24px, 5.6vw, 32px); }
+  .viewer { width: calc(100% - 20px); max-height: calc(100dvh - 20px); }
+  .story { display: block; }
+  .story .note { margin-top: 18px; }
+  .close { top: 6px; right: 6px; }
+}

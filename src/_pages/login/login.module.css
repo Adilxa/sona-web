@@ -1,0 +1,31 @@
+.scene { display:grid; grid-template-columns:1.05fr 1fr; align-items:start; gap:clamp(24px,5vw,90px); }
+.poster { position:relative; overflow:hidden; border-radius:14px; min-height: min(480px,58svh); background: var(--surface) url("/art/signal.webp") 68% center/cover; isolation:isolate; }
+.panel { display:flex; align-items:center; padding-block:6px; }
+.formWrap { width:min(100%,460px); }
+.intro { color:var(--muted); margin:0 0 22px; overflow-wrap:anywhere; max-width:42ch; }
+.methods { display:flex; gap:4px; width:fit-content; border:1px solid var(--hairline); border-radius:60px; padding:4px; margin-bottom:26px; background:#101012; }
+.methods button,.secondary button { display:inline-flex; align-items:center; gap:7px; border:0; background:transparent; }
+.methods button { padding:8px 14px; }
+.formWrap label { display:grid; gap:7px; margin:15px 0; font-size:14px; }
+.formWrap input { width:100%; height:50px; border:1px solid #ffffff40; background:#131316; border-radius:8px; padding:0 14px; font:inherit; font-size:16px; color:white; }
+.formWrap input::placeholder { color:#99959f; }
+.code { letter-spacing:.4em; }
+.submit { display:flex; width:100%; justify-content:space-between; align-items:center; font-weight:750; border-color:transparent; margin-top:22px; padding:14px 20px; }
+.submit,.submit:hover { background:white; color:#100f13; }
+.formWrap button:disabled { opacity:.55; cursor:default; }
+.secondary { display:flex; justify-content:space-between; margin-top:16px; flex-wrap:wrap; gap:8px; }
+.secondary button { padding:5px 0; font-size:14px; }
+.error { color:#ffaaa1; }
+@media(max-width:760px) {
+  .scene { grid-template-columns:1fr; gap:26px; min-height:auto; }
+  .poster { display:none; background:none; }
+  .panel { padding:0 0 24px; }
+  .formWrap { margin:0; }
+}
+.password { position: relative; display: flex; }
+.password input { padding-inline-end: 50px; }
+.password button { position: absolute; inset: 3px 3px 3px auto; display: grid; place-items: center; width: 44px; border: 0; border-radius: 7px; padding: 0; background: transparent; color: var(--studio-silver); }
+.methods button,.secondary button { border-radius: var(--radius-pill); cursor: pointer; min-height: 44px; color: var(--studio-silver); font: 650 14px/1.25 var(--font-ui); }
+.methods button[aria-pressed="true"] { color: var(--studio-ink); background: var(--studio-ice); }
+.formWrap label small { color: var(--muted); }
+.submit { min-height: 46px; border-radius: var(--radius-pill); font: 740 15px/1.2 var(--font-ui); }

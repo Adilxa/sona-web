@@ -1,0 +1,12 @@
+.count {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  max-width: 100%;
+  color: var(--studio-silver);
+  font: 680 12px/1.4 var(--font-ui);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.count svg { flex: none; color: var(--studio-ice); }

@@ -1,0 +1,9 @@
+.mark { color: var(--studio-silver); overflow: visible; }
+.thrill { opacity: 1; }
+.joy, .wistful { opacity: 0; }
+:global(:root[data-mood="joy"]) .thrill, :global(:root[data-mood="wistful"]) .thrill { opacity: 0; }
+:global(:root[data-mood="joy"]) .joy, :global(:root[data-mood="wistful"]) .wistful { opacity: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .mark { transition: color .16s ease; }
+  .mark path { transition: opacity .16s ease, fill .16s ease; }
+}

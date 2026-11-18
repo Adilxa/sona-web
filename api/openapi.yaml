@@ -1,0 +1,2141 @@
+openapi: 3.0.3
+info:
+  title: SONA Web API
+  version: 0.1.0
+security:
+  - bearerAuth: []
+paths:
+  /v1/auth/guest:
+    post:
+      operationId: createGuest
+      tags:
+        - auth
+      summary: Start (or resume) a guest session for a device.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuestRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+          description: '200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v1/auth/email/request:
+    post:
+      operationId: requestEmailCode
+      tags:
+        - auth
+      summary: Send a 6-digit code to verify an email at registration.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailCodeRequest'
+      responses:
+        '202':
+          description: '202'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/AttestationRequired'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /v1/auth/email/verify:
+    post:
+      operationId: verifyEmailCode
+      tags:
+        - auth
+      summary: Complete registration with the emailed code and chosen password.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailCodeVerify'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+          description: '200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '403':
+          $ref: '#/components/responses/AccountBlocked'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v1/auth/email/login:
+    post:
+      operationId: signInWithPassword
+      tags:
+        - auth
+      summary: Sign in with a registered email and password.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordLogin'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+          description: '200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v1/series/{series_id}:
+    get:
+      operationId: getSeries
+      tags:
+        - catalog
+      summary: Series card from the in-memory catalog (CT-03).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SeriesID'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeriesCard'
+          description: '200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/series/{series_id}/episodes:
+    get:
+      operationId: listSeriesEpisodes
+      tags:
+        - catalog
+      summary: Released episodes of a series with the locked flag.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SeriesID'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EpisodeList'
+          description: '200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/episodes/{episode_id}/playback:
+    get:
+      operationId: getEpisodePlayback
+      tags:
+        - playback
+      summary: Signed HLS URL of an episode (CT-08, hot path).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EpisodeID'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playback'
+          description: '200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/LockedProblem'
+          description: '403'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v1/episodes/{episode_id}/unlock:
+    post:
+      operationId: unlockEpisode
+      tags:
+        - access
+      summary: Unlock a paid episode (AC-03, user, idempotent).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EpisodeID'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnlockRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnlockResult'
+          description: '200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: '402'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: '409'
+        '422':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v1/me/daily-free:
+    get:
+      operationId: getMyDailyFree
+      tags:
+        - me
+      summary: Daily free unlocks left for the current user (AC-04).
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyFree'
+          description: '200'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/me/checkin:
+    get:
+      operationId: getMyCheckin
+      tags:
+        - me
+      summary: Recent check-ins and today's status (GM-02).
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckinStatus'
+          description: '200'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: checkIn
+      tags:
+        - me
+      summary: Check in for today and claim the reward (GM-02).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckinResult'
+          description: '200'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/me/streak:
+    get:
+      operationId: getMyStreak
+      tags:
+        - me
+      summary: Recorded watch streak and the next reward (GM-03).
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreakStatus'
+          description: '200'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/me/push-token:
+    put:
+      operationId: putPushToken
+      tags:
+        - notifications
+      summary: Register the push token of the calling device (NT-01).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushTokenRequest'
+      responses:
+        '204':
+          description: '204'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+    delete:
+      operationId: deletePushToken
+      tags:
+        - notifications
+      summary: Remove the push token of the calling device (NT-01).
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: '204'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /v1/me/notification-settings:
+    get:
+      operationId: getNotificationSettings
+      tags:
+        - notifications
+      summary: Which push types the account receives (NT-01).
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationSettings'
+          description: '200'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+    patch:
+      operationId: updateNotificationSettings
+      tags:
+        - notifications
+      summary: Turn push types on or off (NT-01).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationSettingsUpdate'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationSettings'
+          description: '200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /v1/auth/refresh:
+    post:
+      operationId: refreshTokens
+      tags:
+        - auth
+      summary: Rotate the token pair.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+          description: '200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v1/auth/logout:
+    post:
+      operationId: logout
+      tags:
+        - auth
+      summary: Revoke the current session.
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: '204'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/me:
+    get:
+      operationId: getMe
+      tags:
+        - me
+      summary: Profile of the current guest or user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: '200'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      operationId: updateMe
+      tags:
+        - me
+      summary: Change the language and the account time zone (AU-08).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeUpdate'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: '200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/TimezoneChangeTooSoon'
+    delete:
+      operationId: deleteMe
+      tags:
+        - me
+      summary: Request deletion of the account (App Store 5.1.1(v), Google Play).
+      security:
+        - bearerAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletionScheduled'
+          description: '202'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/me/wallet:
+    get:
+      operationId: getMyWallet
+      tags:
+        - me
+      summary: Coin balance of the current user (WL-01).
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+          description: '200'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/me/wallet/ledger:
+    get:
+      operationId: getMyWalletLedger
+      tags:
+        - me
+      summary: Coin movement history, newest first (WL-02).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LedgerPage'
+          description: '200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/me/devices:
+    get:
+      operationId: listMyDevices
+      tags:
+        - me
+      summary: Devices with live sessions of the current user (AU-07).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceList'
+          description: '200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/me/devices/{device_id}:
+    delete:
+      operationId: signOutDevice
+      tags:
+        - me
+      summary: Sign out every session of one device (AU-07).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: '204'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/products:
+    get:
+      operationId: listProducts
+      tags:
+        - billing
+      summary: Coin packages for sale on a platform (PY-01).
+      security: []
+      parameters:
+        - name: platform
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - web
+              - ios
+              - android
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductOfferList'
+          description: '200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /v1/payments/stripe/checkout:
+    post:
+      operationId: createStripeCheckout
+      tags:
+        - billing
+      summary: Start a Stripe Checkout for a coin package (web, PY-02).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutResult'
+          description: '200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /v1/progress:
+    post:
+      operationId: reportProgress
+      tags:
+        - progress
+      summary: Report a watch position heartbeat (PB-01).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProgressReport'
+      responses:
+        '204':
+          description: '204'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /v1/me/continue-watching:
+    get:
+      operationId: continueWatching
+      tags:
+        - progress
+      summary: Series to resume, most recent first (PB-03).
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContinueWatching'
+          description: '200'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /v1/series/{series_id}/like:
+    put:
+      operationId: likeSeries
+      tags:
+        - social
+      summary: Like a series (SO-01, idempotent).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SeriesID'
+      responses:
+        '204':
+          description: '204'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: unlikeSeries
+      tags:
+        - social
+      summary: Remove a like (idempotent).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SeriesID'
+      responses:
+        '204':
+          description: '204'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/series/{series_id}/favorite:
+    put:
+      operationId: favoriteSeries
+      tags:
+        - social
+      summary: Save a series to favorites (SO-01, idempotent).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SeriesID'
+      responses:
+        '204':
+          description: '204'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: unfavoriteSeries
+      tags:
+        - social
+      summary: Remove a series from favorites (idempotent).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SeriesID'
+      responses:
+        '204':
+          description: '204'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/me/favorites:
+    get:
+      operationId: listFavorites
+      tags:
+        - social
+      summary: The current user's saved series, newest first (SO-01).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoritesPage'
+          description: '200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/events:
+    post:
+      operationId: reportEvents
+      tags:
+        - events
+      summary: Report a batch of client events (EV-01).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventBatch'
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventsAccepted'
+          description: '202'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /v1/feed:
+    get:
+      operationId: getFeed
+      tags:
+        - feed
+      summary: The infinite recommendation feed (FD-02).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedPage'
+          description: '200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /v1/catalog:
+    get:
+      operationId: browseCatalog
+      tags:
+        - catalog
+      summary: Browse published series (FD-04).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: genre
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - new
+              - popular
+            default: new
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeriesBriefPage'
+          description: '200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/search:
+    get:
+      operationId: searchSeries
+      tags:
+        - catalog
+      summary: Fuzzy search series by title (FD-04).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 100
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeriesBriefList'
+          description: '200'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/home:
+    get:
+      operationId: getHome
+      tags:
+        - feed
+      summary: The home screen blocks (FD-03).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomePage'
+          description: '200'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+components:
+  schemas:
+    GuestRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - device_id
+        - platform
+        - timezone
+      properties:
+        device_id:
+          type: string
+          minLength: 16
+          maxLength: 128
+          pattern: ^[A-Za-z0-9_-]+$
+        platform:
+          type: string
+          enum:
+            - ios
+            - android
+            - web
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 64
+    TokenPair:
+      type: object
+      additionalProperties: false
+      required:
+        - access_token
+        - access_expires_at
+        - refresh_token
+        - refresh_expires_at
+        - user_id
+        - role
+      properties:
+        access_token:
+          type: string
+        access_expires_at:
+          type: string
+          format: date-time
+        refresh_token:
+          type: string
+        refresh_expires_at:
+          type: string
+          format: date-time
+        user_id:
+          type: string
+          format: uuid
+        role:
+          $ref: '#/components/schemas/UserRole'
+        deletion_cancelled:
+          type: boolean
+    UserRole:
+      type: string
+      enum:
+        - guest
+        - user
+    Problem:
+      type: object
+      required:
+        - type
+        - title
+        - status
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        code:
+          type: string
+      additionalProperties: true
+    EmailCodeRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          minLength: 3
+          maxLength: 254
+        password:
+          type: string
+          minLength: 15
+          maxLength: 128
+        attestation:
+          $ref: '#/components/schemas/Attestation'
+    Attestation:
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+        - token
+      properties:
+        kind:
+          type: string
+          enum:
+            - turnstile
+            - play_integrity
+        token:
+          type: string
+          minLength: 1
+          maxLength: 8192
+    EmailCodeVerify:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+        - password
+        - code
+        - device
+      properties:
+        email:
+          type: string
+          minLength: 3
+          maxLength: 254
+        password:
+          type: string
+          minLength: 15
+          maxLength: 128
+        code:
+          type: string
+          pattern: ^[0-9]{6}$
+        device:
+          $ref: '#/components/schemas/SignInDevice'
+        guest_access_token:
+          $ref: '#/components/schemas/GuestAccessToken'
+        legacy_access_token:
+          type: string
+          minLength: 20
+          maxLength: 2048
+    SignInDevice:
+      type: object
+      additionalProperties: false
+      required:
+        - device_id
+        - platform
+        - timezone
+      properties:
+        device_id:
+          type: string
+          minLength: 16
+          maxLength: 128
+          pattern: ^[A-Za-z0-9_-]+$
+        platform:
+          type: string
+          enum:
+            - ios
+            - android
+            - web
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 64
+    GuestAccessToken:
+      type: string
+      minLength: 20
+      maxLength: 2048
+    PasswordLogin:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+        - password
+        - device
+      properties:
+        email:
+          type: string
+          minLength: 3
+          maxLength: 254
+        password:
+          type: string
+          minLength: 1
+          maxLength: 128
+        device:
+          $ref: '#/components/schemas/SignInDevice'
+        guest_access_token:
+          $ref: '#/components/schemas/GuestAccessToken'
+    SeriesCard:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - slug
+        - lang
+        - title
+        - description
+        - original_language
+        - release_state
+        - is_vip
+        - genres
+        - tags
+        - episodes_count
+        - free_episodes_count
+        - episode_price_coins
+        - full_series_price_coins
+      properties:
+        id:
+          type: integer
+          format: int32
+        slug:
+          type: string
+        lang:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        original_language:
+          type: string
+        release_state:
+          type: string
+          enum:
+            - ongoing
+            - completed
+        is_vip:
+          type: boolean
+        genres:
+          type: array
+          items:
+            $ref: '#/components/schemas/TermRef'
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/TermRef'
+        episodes_count:
+          type: integer
+          format: int32
+        free_episodes_count:
+          type: integer
+          format: int32
+        episode_price_coins:
+          type: integer
+          format: int64
+        full_series_price_coins:
+          type: integer
+          format: int64
+        cover_vertical:
+          allOf:
+            - $ref: '#/components/schemas/CoverImage'
+          nullable: true
+        cover_horizontal:
+          allOf:
+            - $ref: '#/components/schemas/CoverImage'
+          nullable: true
+    TermRef:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - slug
+        - name
+      properties:
+        id:
+          type: integer
+          format: int32
+        slug:
+          type: string
+        name:
+          type: string
+    CoverImage:
+      type: object
+      additionalProperties: false
+      required:
+        - urls
+      properties:
+        urls:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - width
+              - url
+            properties:
+              width:
+                type: integer
+                format: int32
+              url:
+                type: string
+                format: uri
+    EpisodeList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EpisodeItem'
+    EpisodeItem:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - number
+        - locked
+      properties:
+        id:
+          type: integer
+          format: int32
+        number:
+          type: integer
+          format: int32
+        title:
+          type: string
+          nullable: true
+        duration_sec:
+          type: integer
+          format: int32
+          nullable: true
+        locked:
+          type: boolean
+    Playback:
+      type: object
+      additionalProperties: false
+      required:
+        - episode_id
+        - series_id
+        - number
+        - url
+        - expires_at
+        - duration_sec
+        - poster_url
+        - subtitles
+      properties:
+        episode_id:
+          type: integer
+          format: int32
+        series_id:
+          type: integer
+          format: int32
+        number:
+          type: integer
+          format: int32
+        url:
+          type: string
+          format: uri
+        expires_at:
+          type: string
+          format: date-time
+        duration_sec:
+          type: integer
+          format: int32
+        poster_url:
+          type: string
+          format: uri
+        preview_url:
+          type: string
+          format: uri
+          nullable: true
+        subtitles:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - lang
+              - url
+            properties:
+              lang:
+                type: string
+              url:
+                type: string
+                format: uri
+    LockedProblem:
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          required:
+            - reason
+          properties:
+            reason:
+              type: string
+              enum:
+                - registration_required
+                - locked
+                - vip
+            unlock_options:
+              type: array
+              items:
+                $ref: '#/components/schemas/UnlockOption'
+    UnlockOption:
+      type: object
+      additionalProperties: false
+      required:
+        - method
+      properties:
+        method:
+          type: string
+          enum:
+            - daily_free
+            - coins
+            - series_bundle
+        price_coins:
+          type: integer
+          format: int64
+        daily_left:
+          type: integer
+          format: int32
+        resets_at:
+          type: string
+          format: date-time
+    UnlockRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - method
+      properties:
+        method:
+          type: string
+          enum:
+            - daily_free
+            - coins
+            - series_bundle
+    UnlockResult:
+      type: object
+      additionalProperties: false
+      required:
+        - method
+        - episodes
+        - coins_spent
+      properties:
+        method:
+          type: string
+          enum:
+            - daily_free
+            - coins
+            - series_bundle
+        episodes:
+          type: array
+          items:
+            type: integer
+            format: int32
+        coins_spent:
+          type: integer
+          format: int64
+        already_unlocked:
+          type: boolean
+    DailyFree:
+      type: object
+      additionalProperties: false
+      required:
+        - left
+        - limit
+        - resets_at
+      properties:
+        left:
+          type: integer
+          format: int32
+        limit:
+          type: integer
+          format: int32
+        resets_at:
+          type: string
+          format: date-time
+    CheckinStatus:
+      type: object
+      additionalProperties: false
+      required:
+        - today_checked_in
+        - current_day_index
+        - today_reward_coins
+        - days
+      properties:
+        today_checked_in:
+          type: boolean
+        current_day_index:
+          type: integer
+          format: int32
+        today_reward_coins:
+          type: integer
+          format: int64
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckinDay'
+    CheckinDay:
+      type: object
+      additionalProperties: false
+      required:
+        - date
+        - day_index
+      properties:
+        date:
+          type: string
+          format: date
+        day_index:
+          type: integer
+          format: int32
+    CheckinResult:
+      type: object
+      additionalProperties: false
+      required:
+        - day_index
+        - reward_coins
+        - already_checked_in
+      properties:
+        day_index:
+          type: integer
+          format: int32
+        reward_coins:
+          type: integer
+          format: int64
+        already_checked_in:
+          type: boolean
+    StreakStatus:
+      type: object
+      additionalProperties: false
+      required:
+        - count
+        - best
+      properties:
+        count:
+          type: integer
+          format: int32
+        best:
+          type: integer
+          format: int32
+        last_active_date:
+          type: string
+          format: date
+          nullable: true
+        next_milestone:
+          type: integer
+          format: int32
+          nullable: true
+        next_reward_coins:
+          type: integer
+          format: int64
+          nullable: true
+    PushTokenRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - token
+        - provider
+      properties:
+        token:
+          type: string
+          minLength: 32
+          maxLength: 1024
+          pattern: ^[A-Za-z0-9_:.-]+$
+        provider:
+          type: string
+          enum:
+            - fcm
+            - apns
+        locale:
+          type: string
+          maxLength: 35
+          pattern: ^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$
+    NotificationSettings:
+      type: object
+      additionalProperties: false
+      required:
+        - daily_free
+        - streak_expiring
+        - new_episode
+      properties:
+        daily_free:
+          type: boolean
+        streak_expiring:
+          type: boolean
+        new_episode:
+          type: boolean
+    NotificationSettingsUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        daily_free:
+          type: boolean
+        streak_expiring:
+          type: boolean
+        new_episode:
+          type: boolean
+    RefreshRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+          minLength: 43
+          maxLength: 43
+          pattern: ^[A-Za-z0-9_-]+$
+    Me:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - role
+        - timezone
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        role:
+          $ref: '#/components/schemas/UserRole'
+        timezone:
+          type: string
+        locale:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        deletion_scheduled_at:
+          type: string
+          format: date-time
+          nullable: true
+        timezone_change_allowed_at:
+          type: string
+          format: date-time
+          nullable: true
+    MeUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 64
+        locale:
+          type: string
+          minLength: 2
+          maxLength: 35
+          pattern: ^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$
+    TimezoneProblem:
+      type: object
+      additionalProperties: false
+      required:
+        - type
+        - title
+        - status
+        - code
+        - allowed_at
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        code:
+          type: string
+        detail:
+          type: string
+        allowed_at:
+          type: string
+          format: date-time
+    DeletionScheduled:
+      type: object
+      additionalProperties: false
+      required:
+        - deletion_scheduled_at
+      properties:
+        deletion_scheduled_at:
+          type: string
+          format: date-time
+    Wallet:
+      type: object
+      additionalProperties: false
+      required:
+        - paid
+        - bonus
+        - total
+      properties:
+        paid:
+          type: integer
+          format: int64
+        bonus:
+          type: integer
+          format: int64
+        total:
+          type: integer
+          format: int64
+    LedgerPage:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - page
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LedgerEntry'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    LedgerEntry:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - kind
+        - coin_type
+        - delta
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+        coin_type:
+          type: string
+          enum:
+            - paid
+            - bonus
+        delta:
+          type: integer
+          format: int64
+        ref:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    PageInfo:
+      type: object
+      required:
+        - has_more
+      properties:
+        next_cursor:
+          type: string
+          nullable: true
+        has_more:
+          type: boolean
+    DeviceList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - page
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Device'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    Device:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - platform
+        - first_seen_at
+        - last_seen_at
+        - active_sessions
+        - current
+      properties:
+        id:
+          type: string
+          format: uuid
+        platform:
+          type: string
+          enum:
+            - ios
+            - android
+            - web
+        first_seen_at:
+          type: string
+          format: date-time
+        last_seen_at:
+          type: string
+          format: date-time
+        active_sessions:
+          type: integer
+          minimum: 1
+        current:
+          type: boolean
+    ProductOfferList:
+      type: object
+      additionalProperties: false
+      required:
+        - products
+      properties:
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductOffer'
+    ProductOffer:
+      type: object
+      additionalProperties: false
+      required:
+        - sku
+        - coins
+        - bonus_coins
+      properties:
+        sku:
+          type: string
+        coins:
+          type: integer
+          format: int64
+        bonus_coins:
+          type: integer
+          format: int64
+        store_product_id:
+          type: string
+        amount_minor:
+          type: integer
+          format: int64
+        currency:
+          type: string
+    CheckoutRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - product_id
+      properties:
+        product_id:
+          type: string
+          format: uuid
+    CheckoutResult:
+      type: object
+      additionalProperties: false
+      required:
+        - checkout_url
+      properties:
+        checkout_url:
+          type: string
+    ProgressReport:
+      type: object
+      additionalProperties: false
+      required:
+        - episode_id
+        - position_sec
+      properties:
+        episode_id:
+          type: integer
+          format: int32
+          minimum: 1
+        position_sec:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 86400
+    ContinueWatching:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContinueWatchingItem'
+    ContinueWatchingItem:
+      type: object
+      additionalProperties: false
+      required:
+        - series_id
+        - episode_id
+        - episode_number
+        - position_sec
+        - completed
+        - updated_at
+      properties:
+        series_id:
+          type: integer
+          format: int32
+        episode_id:
+          type: integer
+          format: int32
+        episode_number:
+          type: integer
+          format: int32
+        duration_sec:
+          type: integer
+          format: int32
+        position_sec:
+          type: integer
+          format: int32
+        completed:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time
+    FavoritesPage:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - page
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FavoriteItem'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    FavoriteItem:
+      type: object
+      additionalProperties: false
+      required:
+        - series_id
+        - created_at
+      properties:
+        series_id:
+          type: integer
+          format: int32
+        created_at:
+          type: string
+          format: date-time
+    EventBatch:
+      type: object
+      additionalProperties: false
+      required:
+        - events
+      properties:
+        events:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/EventInput'
+    EventInput:
+      type: object
+      additionalProperties: false
+      required:
+        - event_id
+        - type
+        - occurred_at
+      properties:
+        event_id:
+          type: string
+          minLength: 1
+          maxLength: 64
+        type:
+          type: string
+          enum:
+            - impression
+            - play_start
+            - watch_time
+            - swipe_away
+            - like
+            - share
+            - complete
+        series_id:
+          type: integer
+          format: int32
+          minimum: 1
+        episode_id:
+          type: integer
+          format: int32
+          minimum: 1
+        value:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 86400
+        occurred_at:
+          type: string
+          format: date-time
+    EventsAccepted:
+      type: object
+      additionalProperties: false
+      required:
+        - accepted
+      properties:
+        accepted:
+          type: integer
+    FeedPage:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - page
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeedItem'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    FeedItem:
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+        - series_id
+        - slug
+        - title
+      properties:
+        kind:
+          type: string
+          enum:
+            - series
+        series_id:
+          type: integer
+          format: int32
+        slug:
+          type: string
+        title:
+          type: string
+        cover_vertical_version:
+          type: integer
+          format: int32
+        first_episode_id:
+          type: integer
+          format: int32
+        playback_url:
+          type: string
+        poster_url:
+          type: string
+    SeriesBriefPage:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - page
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeriesBrief'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    SeriesBrief:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - slug
+        - title
+        - is_vip
+        - episodes_count
+      properties:
+        id:
+          type: integer
+          format: int32
+        slug:
+          type: string
+        title:
+          type: string
+        cover_vertical_version:
+          type: integer
+          format: int32
+        is_vip:
+          type: boolean
+        episodes_count:
+          type: integer
+          format: int32
+    SeriesBriefList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeriesBrief'
+    HomePage:
+      type: object
+      additionalProperties: false
+      required:
+        - blocks
+      properties:
+        blocks:
+          type: array
+          items:
+            $ref: '#/components/schemas/HomeBlock'
+    HomeBlock:
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+        - items
+      properties:
+        kind:
+          type: string
+          enum:
+            - continue_watching
+            - trending
+            - new
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/HomeItem'
+    HomeItem:
+      type: object
+      additionalProperties: false
+      required:
+        - series_id
+        - slug
+        - title
+      properties:
+        series_id:
+          type: integer
+          format: int32
+        slug:
+          type: string
+        title:
+          type: string
+        cover_vertical_version:
+          type: integer
+          format: int32
+        first_episode_id:
+          type: integer
+          format: int32
+        resume_episode_id:
+          type: integer
+          format: int32
+        resume_position_sec:
+          type: integer
+          format: int32
+  responses:
+    BadRequest:
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+      description: BadRequest
+    TooManyRequests:
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+      description: TooManyRequests
+    AttestationRequired:
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+      description: AttestationRequired
+    Unavailable:
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+      description: Unavailable
+    InvalidCredentials:
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+      description: InvalidCredentials
+    AccountBlocked:
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+      description: AccountBlocked
+    Unauthorized:
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+      description: Unauthorized
+    NotFound:
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+      description: NotFound
+    TimezoneChangeTooSoon:
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/TimezoneProblem'
+      description: TimezoneChangeTooSoon
+    Forbidden:
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+      description: Forbidden
+  parameters:
+    SeriesID:
+      name: series_id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+    AcceptLanguage:
+      name: Accept-Language
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 200
+    EpisodeID:
+      name: episode_id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 16
+        maxLength: 64
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      schema:
+        type: string
+        maxLength: 512
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token of a guest or registered user (15 min, D-13).

@@ -1,0 +1,38 @@
+.section { margin-block: var(--section-gap); border-top: 1px solid var(--hairline); padding-top: clamp(30px, 4vw, 63px); }
+.heading { display: flex; align-items: end; justify-content: space-between; gap: 26px; margin-bottom: 22px; }
+.label { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 14px; color: var(--studio-silver); font-size: 14px; font-weight: 580; }
+.label svg { color: var(--studio-ice); }
+.heading h2 { margin: 0; font: 650 clamp(32px, 4.8vw, 75px)/1.04 var(--font-display); letter-spacing: -.06em; text-wrap: balance; }
+.premise { max-width: 32ch; margin: 0; color: var(--studio-silver); font-size: clamp(15px, 1.18vw, 18px); line-height: 1.48; }
+.viewer { min-width: 0; }
+.tabs {
+  position: relative; isolation: isolate; display: inline-flex; max-width: 100%;
+  align-items: stretch; gap: 3px; margin: 0 0 16px; padding: 4px;
+  border: 1px solid var(--hairline); border-radius: var(--radius-pill); background: var(--studio-glass);
+}
+.tabs button {
+  position: relative; z-index: 1; min-height: 39px; padding: 8px clamp(14px, 1.75vw, 26px);
+  background: transparent; border: 0; border-radius: var(--radius-pill); color: var(--studio-silver);
+  font: 655 14px/1.2 var(--font-ui);
+}
+.tabs button[aria-selected="true"] { color: white; background-color: var(--brand); }
+.tabs button:hover { color: white; }
+.panel:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+.frame { margin: 0; }
+.screen { position: relative; overflow: hidden; border-radius: var(--radius-card); background: var(--surface); }
+.screen img { width: 100%; aspect-ratio: 2.76; height: auto; display: block; object-fit: cover; }
+.counter {
+  position: absolute; inset: auto auto 12px 12px; border-radius: var(--radius-pill);
+  border: 1px solid rgb(255 255 255 / 30%); padding: 5px 12px;
+  background: var(--studio-glass); backdrop-filter: blur(12px); color: white; font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums;
+}
+.caption { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0,.92fr); gap: 24px; margin-top: clamp(15px, 2vw, 26px); }
+.caption span { color: var(--muted); font-size: 13px; }
+.caption h3 { font: 620 clamp(21px, 2.3vw, 35px)/1.16 var(--font-display); letter-spacing: -.045em; margin: 4px 0 0; }
+.caption p { max-width: 56ch; margin: 0; color: var(--studio-silver); font-size: clamp(15px, 1.25vw, 19px); line-height: 1.5; }
+@media (max-width: 760px) {
+  .heading { display: grid; gap: 12px; margin-bottom: 16px; }
+  .premise { max-width: 44ch; }
+  .screen img { height: auto; aspect-ratio: 1.65; }
+  .caption { grid-template-columns: 1fr; gap: 9px; }
+}
