@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Button } from "@animate-ui/react/primitives/buttons/button";
 import { ArrowRight, LockKeyhole } from "lucide-react";
 import { ActionLink } from "@/shared/ui/action-link";
 import { changeContent, SonaError } from "@/shared/api/content";
 import type { components } from "@/shared/api/schema";
+import { wallScrollEdge } from "./player-gesture";
 import styles from "./access-wall.module.css";
 
 type Schema = components["schemas"];
@@ -28,8 +29,20 @@ export function AccessWall({ episode, number, problem, guest, returnPath, onUnlo
   const inFlight = useRef(false);
   const intents = useRef(new Map<string, string>());
   const active = useRef(true);
+  const panel = useRef<HTMLElement>(null);
   const [pending, setPending] = useState<Schema["UnlockOption"]["method"]>();
   const [error, setError] = useState<Error>();
+  useLayoutEffect(() => {
+    const element = panel.current;
+    if (!element) return;
+    const measure = () => { element.dataset.scrollEdge = wallScrollEdge(element); };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    for (const child of element.children) observer.observe(child);
+    element.addEventListener("scroll", measure, { passive: true });
+    return () => { observer.disconnect(); element.removeEventListener("scroll", measure); };
+  }, [problem, guest, pending, error]);
   useEffect(() => {
     active.current = true;
     return () => { active.current = false; };
@@ -62,7 +75,7 @@ export function AccessWall({ episode, number, problem, guest, returnPath, onUnlo
   const daily = options.find(option => option.method === "daily_free");
   const prices = options.filter(option => option.method !== "daily_free");
   const reset = daily?.daily_left === 0 ? resetLabel(daily.resets_at) : "";
-  return <section className={styles.wall} data-access-wall aria-labelledby="access-title">
+  return <section ref={panel} className={styles.wall} data-access-wall aria-labelledby="access-title">
     <div className={styles.heading}>
       <span className={styles.eyebrow}><LockKeyhole size={14} aria-hidden="true" /> Серия {number}</span>
       <h2 id="access-title">{problem.reason === "vip" ? "Доступ по VIP" : needsLogin ? "Продолжить просмотр" : "Открыть серию"}</h2>

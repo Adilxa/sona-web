@@ -21,8 +21,8 @@ export const metadata: Metadata = {
 
 export function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="ru">
-      <body>
+    <html lang="ru" data-scroll-behavior="smooth">
+      <body id="page-top">
         <AnimateUIProvider tempo={0.9} reducedMotion="user">
           <QueryProvider>
             <MoodProvider>

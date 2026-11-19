@@ -24,13 +24,13 @@ function SocialButton({ kind, value, reading, readError, refetch, seriesId, view
     ? value ? `Убрать${subject} из избранного` : `Добавить${subject} в избранное`
     : value ? "Убрать отметку «Нравится»" : "Поставить отметку «Нравится»";
   const text = failure ? "Повторить" : save ? value ? "В избранном" : "В избранное" : value ? "Понравилось" : "Нравится";
-  const Icon = failure ? RotateCw : save ? value ? BookmarkCheck : Bookmark : Heart;
+  const Icon = failure ? RotateCw : save ? value && !compact ? BookmarkCheck : Bookmark : Heart;
   const label = pending ? "Сохраняем изменение" : readError ? "Повторить загрузку избранного" : failed ? `Повторить: ${action}` : action;
   return <span className={styles.wrap} data-compact={compact || undefined}>
     <Button type="button" className={styles.button} disabled={!viewerId || working} aria-label={label} title={label}
       aria-pressed={value} aria-busy={working || undefined} data-failed={Boolean(failure) || undefined}
       onClick={() => { if (readError) refetch?.(); else write(!value); }}>
-      {pending ? <SonaLoader label="Сохраняем…" /> : <><Icon size={compact ? 19 : 17} fill={!save && value && !failure ? "currentColor" : "none"} aria-hidden="true" />{!compact && text}</>}
+      {pending ? <SonaLoader label="Сохраняем…" /> : <><Icon size={compact ? 16 : 17} fill={value && !failure && (compact || !save) ? "currentColor" : "none"} aria-hidden="true" />{!compact && text}</>}
     </Button>
     {failure && (!compact || !readError) && <span role="alert" className={styles.error}>{failure}</span>}
   </span>;

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { episodeSwipe, mediaTime, reelDirection, reelOffset, releaseVelocity } from "../src/_pages/series-details/ui/player-gesture";
+import { episodeSwipe, mediaTime, reelDirection, reelOffset, releaseVelocity, wallCanScroll, wallScrollEdge } from "../src/_pages/series-details/ui/player-gesture";
 
 test("only intentional vertical flicks select an adjacent episode", () => {
   const origin = { x: 20, y: 150, time: 1000 };
@@ -40,4 +40,25 @@ test("a fast direction change near release outweighs an earlier stroke and holdi
   const samples = [{ y: 280, time: 0 }, { y: 180, time: 40 }, { y: 150, time: 65 }, { y: 170, time: 90 }];
   assert.ok(releaseVelocity(samples,{ y: 180, time: 100 }) > .8);
   assert.equal(releaseVelocity(samples,{ y: 170, time: 270 }),0);
+});
+
+test("a deliberate downward swipe across the access wall opens the previous episode on tall phones", () => {
+  const heldAtRelease = 0;
+  assert.equal(reelDirection(122, 844, heldAtRelease, true), -1);
+  assert.equal(reelDirection(12, 844, .7, true), 0);
+  assert.equal(reelDirection(45, 844, .05, true), 0);
+  assert.equal(reelDirection(122, 844, -.5, true), 0);
+  assert.equal(reelDirection(122, 844, heldAtRelease), 0);
+});
+
+test("the access card scrolls natively when it has more content in the gesture direction", () => {
+  const edge = (top: number, content = 570) => wallScrollEdge({ clientHeight: 270, scrollHeight: content, scrollTop: top });
+  assert.equal(edge(0, 270), "none");
+  assert.equal(wallCanScroll(edge(0, 270), 125), false);
+  assert.equal(wallCanScroll(edge(-.4), 125), false);
+  assert.equal(wallCanScroll(edge(0), -125), true);
+  assert.equal(wallCanScroll(edge(130), 125), true);
+  assert.equal(wallCanScroll(edge(130), -125), true);
+  assert.equal(wallCanScroll(edge(299.7), 125), true);
+  assert.equal(wallCanScroll(edge(301), -125), false);
 });

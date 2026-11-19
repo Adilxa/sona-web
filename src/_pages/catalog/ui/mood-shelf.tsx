@@ -101,7 +101,7 @@ export function MoodShelf() {
     observer.observe(section.current);
     return () => observer.disconnect();
   }, []);
-  return <section id="mood-shelf" ref={section} className={styles.section} aria-labelledby="mood-heading">
+  return <section id="mood-shelf" tabIndex={-1} ref={section} className={styles.section} aria-labelledby="mood-heading">
     {(error || !visible || !me) && <MoodHeading />}
     {error ? <div className={styles.feedback}><span role="alert">{error}</span><Button className={styles.more} onClick={reload}>Повторить</Button></div>
       : visible && me ? <MoodResults key={JSON.stringify([me.id, me.role, me.locale])} guest={me.role === "guest"} viewerId={me.id} />

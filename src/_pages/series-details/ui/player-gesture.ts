@@ -41,11 +41,25 @@ export function releaseVelocity(samples: MotionSample[], end: MotionSample) {
   return (end.y - from.y) / Math.max(12,end.time - from.time);
 }
 
-export function reelDirection(distance: number, height: number, velocity: number): -1 | 0 | 1 {
+export function reelDirection(distance: number, height: number, velocity: number, accessWall = false): -1 | 0 | 1 {
   const length = Math.abs(distance);
   if (height <= 0 || length < 22) return 0;
   const speedAlongDrag = velocity * Math.sign(distance);
   if (speedAlongDrag < -.3) return 0;
-  if (length < height * .31 && speedAlongDrag < .56) return 0;
+  // The access card leaves less room to drag than a full-screen video.
+  const travel = accessWall ? Math.min(96, height * .31) : height * .31;
+  if (length < travel && speedAlongDrag < .56) return 0;
   return distance < 0 ? 1 : -1;
+}
+
+export function wallScrollEdge(panel: Pick<HTMLElement, "clientHeight" | "scrollHeight" | "scrollTop">) {
+  const limit = panel.scrollHeight - panel.clientHeight;
+  if (limit <= 1) return "none";
+  if (panel.scrollTop <= 1) return "top";
+  if (panel.scrollTop >= limit - 1) return "bottom";
+  return "middle";
+}
+
+export function wallCanScroll(edge: ReturnType<typeof wallScrollEdge> | undefined, fingerTravel: number) {
+  return edge === "middle" || (edge === "top" && fingerTravel < 0) || (edge === "bottom" && fingerTravel > 0);
 }

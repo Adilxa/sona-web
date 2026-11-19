@@ -10,6 +10,9 @@ main:has(> [data-view="home"]) { max-width: none; padding-inline: 0; }
 main:has([data-view="feed"]) { padding-bottom: 0; }
 html { scroll-padding-top:calc(var(--header-height) + 16px); }
 html { scroll-padding-bottom: var(--mobile-nav-height); }
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
 .section-title { font-size:var(--section-title); font-weight:620; line-height:1.06; letter-spacing:-.045em; text-wrap:balance; overflow-wrap:break-word; margin:0; }
 
 h1, h2 { font-family: var(--font-display); line-height: .92; letter-spacing: -.02em; }

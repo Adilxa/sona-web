@@ -9,8 +9,12 @@
 .button:disabled { cursor: default; }
 .button[aria-busy=true] { cursor: progress; }
 .wrap[data-compact] { position: relative; justify-items: end; }
-.wrap[data-compact] .button { width: 44px; padding: 0; border-color: rgb(255 255 255 / 32%); background: rgb(8 12 14 / 85%); color: white; }
-.wrap[data-compact] .button[aria-pressed=true] { background: var(--studio-ice); color: var(--studio-ink); border-color: var(--studio-ice); }
+.wrap[data-compact] .button { position: relative; isolation: isolate; width: 44px; padding: 0; border: 0; background: transparent; color: white; }
+.wrap[data-compact] .button::before {
+  content: ""; position: absolute; z-index: -1; inset: 6px;
+  border-radius: 50%; background: rgb(8 12 14 / 76%);
+}
+.wrap[data-compact] .button[aria-pressed=true] { color: var(--studio-ice); }
 .wrap[data-compact] .button [role=status] > span:last-child { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); overflow: hidden; }
 .error { max-width: 26ch; color: var(--studio-silver); font: 610 12px/1.35 var(--font-ui); }
 .wrap[data-compact] .error {

@@ -7,7 +7,7 @@ export function SiteFooter() {
     <div className={styles.inner}>
       <Link href="/" aria-label="SONA, главная" className={styles.wordmark}><BrandMark /></Link>
       <nav aria-label="Разделы в подвале">
-        <div><strong>Смотреть</strong><Link href="/feed">Лента</Link><Link href="/catalog">Каталог сериалов</Link></div>
+        <div><strong>Смотреть</strong><Link href="/feed">Лента</Link><Link href="/catalog">Каталог сериалов</Link><a href="#page-top">Наверх ↑</a></div>
         <div><strong>Моя коллекция</strong><Link href="/history">История просмотра</Link><Link href="/favorites">Избранное</Link><Link href="/profile">Профиль</Link></div>
       </nav>
     </div>

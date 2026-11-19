@@ -86,7 +86,7 @@ function Watch({ id, episode, at, autoStart, guest }: Props & { guest: boolean }
   const firstChoice = resume ?? ordered[0];
   const savedPosition = resume && !history?.completed ? history?.position_sec ?? 0 : 0;
   const total = series?.episodesCount ?? (ordered.length || undefined);
-  const description = series?.description ?? "";
+  const description = series?.description?.trim();
   const queueStart = Math.max(0, Math.min(Math.max(0,index - 1), ordered.length - 4));
   const queue = allEpisodes ? ordered : ordered.slice(queueStart,queueStart + 4);
   const locked = current?.locked;
@@ -168,6 +168,10 @@ function Watch({ id, episode, at, autoStart, guest }: Props & { guest: boolean }
         {series && <div className={styles.meta}>{series.genres.map(genre => <span key={genre.id}>{genre.name}</span>)}
           <span>{series.releaseState === "completed" ? "Завершён" : "Выходит"}</span>
         </div>}
+        {description && <section className={styles.about} aria-labelledby="series-about-title">
+          <h2 id="series-about-title">О сериале</h2>
+          <p>{description}</p>
+        </section>}
         {(ordered.length > 0 || episodes.busy) && <section className={styles.episodes} aria-labelledby="episodes-title">
           <div className={styles.listHeading}><h2 id="episodes-title">Серии</h2><EpisodeCount total={total} current={current?.number} /></div>
           <ol>
@@ -193,7 +197,6 @@ function Watch({ id, episode, at, autoStart, guest }: Props & { guest: boolean }
           {ended && <span className={styles.ended} role="status">Серия завершена</span>}
         </section>}
         {series && <SeriesSocialActions seriesId={id} />}
-        {description && <details className={styles.about}><summary>О сериале <ChevronDown size={15} /></summary><p>{description}</p></details>}
       </aside>;
 
   return <article className={styles.article} data-view="watch" data-immersive={immersive}>

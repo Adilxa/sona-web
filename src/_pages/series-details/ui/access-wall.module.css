@@ -25,7 +25,23 @@
 .wall .note + a, .wall .error { margin-top: 12px; }
 .wall p[role=alert] a { color: var(--studio-ice); text-decoration: underline; }
 @media (max-width:760px) {
-  :global([data-watch-screen]) :global(div):has(> .wall) { padding: max(64px,env(safe-area-inset-top)) 14px max(18px,env(safe-area-inset-bottom)); }
+  :global([data-watch-screen]) :global(div):has(> .wall) {
+    padding: max(64px,env(safe-area-inset-top)) 14px max(18px,env(safe-area-inset-bottom));
+    overflow: clip; pointer-events: none;
+  }
+  .wall {
+    max-height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+    pointer-events: auto; touch-action: pan-x pinch-zoom;
+  }
+  .wall:is([data-scroll-edge=top],[data-scroll-edge=middle],[data-scroll-edge=bottom]) {
+    touch-action: pan-y pinch-zoom;
+  }
+  /* At a scroll boundary, the outward gesture can select an episode. */
+  @supports (touch-action: pan-down pinch-zoom) {
+    .wall[data-scroll-edge=top] { touch-action: pan-down pinch-zoom; }
+    .wall[data-scroll-edge=bottom] { touch-action: pan-up pinch-zoom; }
+  }
+  .wall button:disabled { pointer-events: none; }
 }
 @media (max-height:500px) {
   :global([data-watch-screen]) :global(div):has(> .wall) { justify-content: start; }

@@ -1,4 +1,3 @@
-import { Layers2 } from "lucide-react";
 import styles from "./episode-count.module.css";
 
 const plural = new Intl.PluralRules("ru");
@@ -14,5 +13,5 @@ export function EpisodeCount({ total, current }: { total?: number; current?: num
     const form = plural.select(total as number);
     label = `${total} ${form === "one" ? "серия" : form === "few" ? "серии" : "серий"}`;
   }
-  return <span className={styles.count}><Layers2 size={13} strokeWidth={1.8} aria-hidden="true" />{label}</span>;
+  return <span className={styles.count}>{label}</span>;
 }

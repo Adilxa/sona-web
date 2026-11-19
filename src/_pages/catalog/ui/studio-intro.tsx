@@ -116,9 +116,18 @@ export function ScreeningRoom() {
               </ToggleGroup.Item>
             ))}
           </ToggleGroup.Root>
-          <h1 id="cinema-title" aria-live="polite">AI-сериалы<br /><span key={mood}>{moods[mood].headline}</span></h1>
+          <h1 id="cinema-title" aria-live="polite" aria-atomic="true">
+            <span className={styles.titleLine}><span className={styles.titleLead}>AI-сериалы</span></span>{" "}
+            <span className={styles.titleLine}>
+              <span className={styles.titleEndings}>
+                {moodOptions.map(id => (
+                  <span key={id} aria-hidden={id !== mood} className={styles.titleEnding}>{moods[id].headline}</span>
+                ))}
+              </span>
+            </span>
+          </h1>
           <div className={styles.actions}>
-            <Button asChild className={styles.catalog}><Link href="#mood-shelf">К подборке <ArrowDown size={16} aria-hidden="true" /></Link></Button>
+            <Button asChild className={styles.catalog}><a href="#mood-shelf">К подборке <ArrowDown size={16} aria-hidden="true" /></a></Button>
             <Button asChild variant="outline" className={styles.story}><Link href="/feed"><Play size={15} fill="currentColor" aria-hidden="true" /> Смотреть ленту</Link></Button>
           </div>
         </div>

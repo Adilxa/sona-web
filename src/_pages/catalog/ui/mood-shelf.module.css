@@ -1,4 +1,10 @@
-.section { margin-bottom: var(--section-gap); scroll-margin-block-start: 12px; }
+.section { margin-bottom: var(--section-gap); }
+.section:focus { outline: none; }
+.section:focus-visible h2 { text-decoration: underline; text-decoration-color: var(--studio-ice); text-underline-offset: .16em; }
+@media (prefers-reduced-motion: no-preference) {
+  .section:target h2 { animation: shelf-arrival 1.4s ease-out; }
+}
+@keyframes shelf-arrival { from { color: var(--studio-ice); } to { color: var(--text); } }
 .heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; margin-bottom: clamp(14px,1.8vw,24px); }
 .heading h2 { margin: 0; font: 680 var(--section-title)/1.1 var(--font-display); letter-spacing: -.045em; }
 .options { display: inline-flex; flex-wrap: wrap; gap: 3px; padding: 3px; border-radius: var(--radius-pill); background: var(--surface); border: 1px solid var(--hairline); }
