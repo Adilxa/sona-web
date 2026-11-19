@@ -16,11 +16,10 @@
 .footer nav a { font: 620 14px/1.35 var(--font-ui); width: fit-content; padding-block: 7px; text-decoration: none; }
 .footer nav a:hover { color: var(--studio-ice); text-decoration: underline; text-underline-offset: 3px; }
 :global(main:has([data-view="feed"])) + .footer { display: none; }
-@media (max-width: 600px) {
-  .inner { flex-direction: column; }
-  .footer nav { width: 100%; justify-content: space-between; }
-  .footer nav a { display: inline-flex; min-height: 44px; align-items: center; }
-}
 @media (max-width: 760px) {
+  .inner { flex-direction: column; }
+  .footer nav { width: 100%; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px 14px; }
+  .footer nav a { display: inline-flex; min-height: 44px; align-items: center; }
   :global(main:has([data-view="watch"][data-immersive="true"])) + .footer { display: none; }
 }
+.identity { display: grid; justify-items: start; gap: 16px; }

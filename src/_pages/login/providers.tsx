@@ -1,5 +1,7 @@
 "use client";
 
+import { useI18n } from "@/shared/i18n/context";
+
 import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 const sitekey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
@@ -12,6 +14,7 @@ declare global {
           sitekey: string;
           action: string;
           theme: string;
+          language: string;
           callback: (token: string) => void;
           "expired-callback": () => void;
           "error-callback": () => void;
@@ -22,6 +25,7 @@ declare global {
   }
 }
 export function BotCheck({ onToken }: { onToken: (token: string) => void }) {
+  const { locale, t } = useI18n();
   const container = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(false);
@@ -32,6 +36,7 @@ export function BotCheck({ onToken }: { onToken: (token: string) => void }) {
       sitekey,
       action: "otp",
       theme: "dark",
+      language: locale,
       callback: onToken,
       "expired-callback": () => onToken(""),
       "error-callback": () => {
@@ -39,9 +44,9 @@ export function BotCheck({ onToken }: { onToken: (token: string) => void }) {
         setError(true);
       },
     });
-    return () => sdk.remove(id);
-  }, [ready, onToken]);
-  if (!sitekey) return <p role="alert">Проверка регистрации временно недоступна. Попробуйте позже.</p>;
+    return () => { sdk.remove(id); onToken(""); };
+  }, [ready, onToken, locale]);
+  if (!sitekey) return <p role="alert">{t("Проверка регистрации временно недоступна. Попробуйте позже.", "Registration verification is temporarily unavailable. Try again later.")}</p>;
   return (
     <>
       <Script
@@ -50,7 +55,7 @@ export function BotCheck({ onToken }: { onToken: (token: string) => void }) {
         onError={() => setError(true)}
       />
       <div ref={container} />
-      {error && <p role="alert">Не удалось загрузить проверку устройства.</p>}
+      {error && <p role="alert">{t("Не удалось загрузить проверку устройства.", "Couldn’t load device verification.")}</p>}
     </>
   );
 }

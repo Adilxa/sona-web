@@ -12,7 +12,7 @@ const firebaseConfig = {
 const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
 export const pushPreferenceKey = "sona-notifications-device";
 type Status = "off" | "on" | "working" | "error";
-type DeviceState = { viewer: string; status: Status; error?: string };
+type DeviceState = { viewer: string; status: Status; error?: "sync" | "blocked" | "permission" | "update" };
 const initialState: DeviceState = { viewer: "", status: "off" };
 let state = initialState;
 const subscribers = new Set<() => void>();
@@ -127,7 +127,7 @@ export function syncDevicePush(viewer: string, locale?: string | null, force = f
       lastSync = { key, at: Date.now() };
       publish({ viewer, status: enabled ? "on" : "off" });
     } catch {
-      if (run === generation) publish({ viewer, status: "error", error: "Не удалось обновить уведомления на этом устройстве." });
+      if (run === generation) publish({ viewer, status: "error", error: "sync" });
     } finally {
       if (run === generation) request = undefined;
     }
@@ -142,14 +142,14 @@ export async function chooseDevicePush(viewer: string, locale: string | null | u
       // Call in the click handler before loading any SDK to preserve browser user activation.
       const permission = Notification.permission === "default" ? await Notification.requestPermission() : Notification.permission;
       if (permission !== "granted") {
-        publish({ viewer, status: "error", error: permission === "denied" ? "Уведомления заблокированы в настройках браузера." : "Разрешение на уведомления не выдано." });
+        publish({ viewer, status: "error", error: permission === "denied" ? "blocked" : "permission" });
         return;
       }
     }
     localStorage.setItem(pushPreferenceKey, enabled ? "on" : "off");
     await syncDevicePush(viewer, locale, true);
   } catch {
-    publish({ viewer, status: "error", error: "Не удалось изменить разрешение на уведомления." });
+    publish({ viewer, status: "error", error: "update" });
   }
 }
 

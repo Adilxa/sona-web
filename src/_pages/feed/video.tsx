@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/shared/i18n/context";
 import { Button } from "@animate-ui/react/primitives/buttons/button";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { changeContent, SonaError } from "@/shared/api/content";
@@ -17,9 +18,10 @@ export function FeedVideo({ item, activity, position, onPosition, autoplay, onLo
   autoplay: RefObject<boolean>;
   onLocked: () => void;
 }) {
+  const { t } = useI18n();
   const ref = useRef<HTMLVideoElement>(null);
   const resumeAt = useRef(position);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [loading, setLoading] = useState(autoplay.current);
   useEffect(() => {
@@ -150,7 +152,7 @@ export function FeedVideo({ item, activity, position, onPosition, autoplay, onLo
       hls = undefined;
       activity.pause(id);
       setLoading(false);
-      setError("Не удалось воспроизвести серию.");
+      setError(true);
     };
     const canPlay = () => { setLoading(false); attemptPlay(); };
     const onPlay = () => {
@@ -236,9 +238,9 @@ export function FeedVideo({ item, activity, position, onPosition, autoplay, onLo
 
   return <>
     <video className={styles.media} ref={ref} muted playsInline controls preload="none"
-      aria-label={`Первая серия «${item.title}»`} poster={item.poster_url} />
-    {loading && !error && <div className={styles.loading}><SonaLoader label="Загружаем серию" /></div>}
-    {error && <div className={styles.videoError} role="status">{error}
-      <Button onClick={() => { setError(""); setLoading(true); autoplay.current = true; setAttempt(value => value + 1); }}>Повторить</Button></div>}
+      aria-label={t(`Первая серия «${item.title}»`, `First episode of “${item.title}”`)} poster={item.poster_url} />
+    {loading && !error && <div className={styles.loading}><SonaLoader label={t("Загружаем серию", "Loading episode")} /></div>}
+    {error && <div className={styles.videoError} role="status">{t("Не удалось воспроизвести серию.", "Couldn’t play this episode.")}
+      <Button onClick={() => { setError(false); setLoading(true); autoplay.current = true; setAttempt(value => value + 1); }}>{t("Повторить", "Try again")}</Button></div>}
   </>;
 }

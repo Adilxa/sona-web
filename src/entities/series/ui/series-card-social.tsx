@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/shared/i18n/context";
 import { Button } from "@animate-ui/react/primitives/buttons/button";
 import { Bookmark, BookmarkCheck, Heart, RotateCw } from "lucide-react";
 import { SonaLoader } from "@/shared/ui/sona-loader";
@@ -15,22 +16,26 @@ function SocialButton({ kind, value, reading, readError, refetch, seriesId, view
   readError?: string;
   refetch?: () => void;
 }) {
+  const { t } = useI18n();
   const { write, pending, failed, error } = useSeriesSocialWrite(kind, viewerId, seriesId);
   const save = kind === "favorite";
-  const failure = readError || (failed ? error || "Не удалось сохранить изменение." : undefined);
+  const failure = readError || (failed ? error || t("Не удалось сохранить изменение.", "Couldn’t save this change.") : undefined);
   const working = pending || reading;
-  const subject = title ? ` «${title}»` : "";
+  const subject = title ? t(` «${title}»`, ` “${title}”`) : "";
   const action = save
-    ? value ? `Убрать${subject} из избранного` : `Добавить${subject} в избранное`
-    : value ? "Убрать отметку «Нравится»" : "Поставить отметку «Нравится»";
-  const text = failure ? "Повторить" : save ? value ? "В избранном" : "В избранное" : value ? "Понравилось" : "Нравится";
+    ? value ? t(`Убрать${subject} из избранного`, `Remove${subject} from favorites`) : t(`Добавить${subject} в избранное`, `Add${subject} to favorites`)
+    : value ? t("Убрать отметку «Нравится»", "Unlike this series") : t("Поставить отметку «Нравится»", "Like this series");
+  const text = failure ? t("Повторить", "Try again") : save ? value ? t("В избранном", "Saved") : t("В избранное", "Save") : value ? t("Понравилось", "Liked") : t("Нравится", "Like");
   const Icon = failure ? RotateCw : save ? value && !compact ? BookmarkCheck : Bookmark : Heart;
-  const label = pending ? "Сохраняем изменение" : readError ? "Повторить загрузку избранного" : failed ? `Повторить: ${action}` : action;
+  const readingCompact = Boolean(compact && reading && viewerId);
+  const label = pending ? t("Сохраняем изменение", "Saving changes") : readingCompact ? t("Загружаем избранное", "Loading favorites") :
+    readError ? t("Повторить загрузку избранного", "Retry loading favorites") : failed ? t(`Повторить: ${action}`, `Retry: ${action}`) : action;
   return <span className={styles.wrap} data-compact={compact || undefined}>
-    <Button type="button" className={styles.button} disabled={!viewerId || working} aria-label={label} title={label}
+    <Button type="button" className={compact ? styles.compactButton : styles.button} disabled={!viewerId || working} aria-label={label} title={label}
       aria-pressed={value} aria-busy={working || undefined} data-failed={Boolean(failure) || undefined}
       onClick={() => { if (readError) refetch?.(); else write(!value); }}>
-      {pending ? <SonaLoader label="Сохраняем…" /> : <><Icon size={compact ? 16 : 17} fill={value && !failure && (compact || !save) ? "currentColor" : "none"} aria-hidden="true" />{!compact && text}</>}
+      {pending || readingCompact ? <SonaLoader label={pending ? t("Сохраняем…", "Saving…") : t("Загружаем…", "Loading…")} /> :
+        <><Icon size={compact ? 20 : 17} fill={value && !failure && (compact || !save) ? "currentColor" : "none"} aria-hidden="true" />{!compact && text}</>}
     </Button>
     {failure && (!compact || !readError) && <span role="alert" className={styles.error}>{failure}</span>}
   </span>;

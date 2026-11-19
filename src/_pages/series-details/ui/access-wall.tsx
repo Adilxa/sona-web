@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useI18n } from "@/shared/i18n/context";
 import { Button } from "@animate-ui/react/primitives/buttons/button";
 import { ArrowRight, LockKeyhole } from "lucide-react";
 import { ActionLink } from "@/shared/ui/action-link";
@@ -11,11 +12,11 @@ import styles from "./access-wall.module.css";
 
 type Schema = components["schemas"];
 
-function resetLabel(date?: string) {
+function resetLabel(locale: string, date?: string) {
   if (!date) return "";
   const reset = new Date(date);
   if (!Number.isFinite(reset.valueOf())) return "";
-  return new Intl.DateTimeFormat("ru", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(reset);
+  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(reset);
 }
 
 export function AccessWall({ episode, number, problem, guest, returnPath, onUnlocked }: {
@@ -26,12 +27,13 @@ export function AccessWall({ episode, number, problem, guest, returnPath, onUnlo
   returnPath: string;
   onUnlocked: () => void;
 }) {
+  const { locale, t } = useI18n();
   const inFlight = useRef(false);
   const intents = useRef(new Map<string, string>());
   const active = useRef(true);
   const panel = useRef<HTMLElement>(null);
   const [pending, setPending] = useState<Schema["UnlockOption"]["method"]>();
-  const [error, setError] = useState<Error>();
+  const [error, setError] = useState<SonaError | true>();
   useLayoutEffect(() => {
     const element = panel.current;
     if (!element) return;
@@ -42,7 +44,7 @@ export function AccessWall({ episode, number, problem, guest, returnPath, onUnlo
     for (const child of element.children) observer.observe(child);
     element.addEventListener("scroll", measure, { passive: true });
     return () => { observer.disconnect(); element.removeEventListener("scroll", measure); };
-  }, [problem, guest, pending, error]);
+  }, [problem, guest, pending, error, locale]);
   useEffect(() => {
     active.current = true;
     return () => { active.current = false; };
@@ -63,7 +65,7 @@ export function AccessWall({ episode, number, problem, guest, returnPath, onUnlo
       if (reason instanceof SonaError && reason.status >= 400 && reason.status < 500 && reason.status !== 429) {
         intents.current.delete(method);
       }
-      if (active.current) setError(reason instanceof Error ? reason : new Error("Не удалось открыть серию."));
+      if (active.current) setError(reason instanceof SonaError ? reason : true);
     } finally {
       inFlight.current = false;
       if (active.current) setPending(undefined);
@@ -74,35 +76,35 @@ export function AccessWall({ episode, number, problem, guest, returnPath, onUnlo
   const options = needsLogin ? [] : problem.unlock_options ?? [];
   const daily = options.find(option => option.method === "daily_free");
   const prices = options.filter(option => option.method !== "daily_free");
-  const reset = daily?.daily_left === 0 ? resetLabel(daily.resets_at) : "";
+  const reset = daily?.daily_left === 0 ? resetLabel(locale, daily.resets_at) : "";
   return <section ref={panel} className={styles.wall} data-access-wall aria-labelledby="access-title">
     <div className={styles.heading}>
-      <span className={styles.eyebrow}><LockKeyhole size={14} aria-hidden="true" /> Серия {number}</span>
-      <h2 id="access-title">{problem.reason === "vip" ? "Доступ по VIP" : needsLogin ? "Продолжить просмотр" : "Открыть серию"}</h2>
+      <span className={styles.eyebrow}><LockKeyhole size={14} aria-hidden="true" /> {t(`Серия ${number}`, `Episode ${number}`)}</span>
+      <h2 id="access-title">{problem.reason === "vip" ? t("Доступ по VIP", "VIP access") : needsLogin ? t("Продолжить просмотр", "Continue watching") : t("Открыть серию", "Unlock episode")}</h2>
     </div>
     {needsLogin ? <>
-      <p className={styles.note}>Войдите, чтобы увидеть варианты доступа к этой серии.</p>
-      <ActionLink className={styles.primary} href={`/login?next=${encodeURIComponent(returnPath)}`}>Войти и продолжить <ArrowRight size={17} aria-hidden="true" /></ActionLink>
+      <p className={styles.note}>{t("Войдите, чтобы увидеть варианты доступа к этой серии.", "Sign in to see how to unlock this episode.")}</p>
+      <ActionLink className={styles.primary} href={`/login?next=${encodeURIComponent(returnPath)}`}>{t("Войти и продолжить", "Sign in to continue")} <ArrowRight size={17} aria-hidden="true" /></ActionLink>
     </> : <>
       {daily && <div className={styles.daily}>
         <Button className={styles.primary} disabled={!!pending || daily.daily_left === 0} aria-busy={pending === "daily_free"}
           onClick={() => open("daily_free")}>
-          {pending === "daily_free" ? "Открываем…" : "Открыть бесплатно"} <ArrowRight size={17} aria-hidden="true" />
+          {pending === "daily_free" ? t("Открываем…", "Unlocking…") : t("Открыть бесплатно", "Unlock for free")} <ArrowRight size={17} aria-hidden="true" />
         </Button>
-        {daily.daily_left != null && <small>{daily.daily_left > 0 ? `Осталось на сегодня: ${daily.daily_left}` : reset ? `Новые открытия — ${reset}` : "Бесплатные открытия на сегодня закончились"}</small>}
+        {daily.daily_left != null && <small>{daily.daily_left > 0 ? t(`Осталось на сегодня: ${daily.daily_left}`, `Free unlocks left today: ${daily.daily_left}`) : reset ? t(`Новые открытия — ${reset}`, `Free unlocks reset on ${reset}`) : t("Бесплатные открытия на сегодня закончились", "You’ve used today’s free unlocks")}</small>}
       </div>}
       {prices.length > 0 && <div className={styles.prices}>
         {prices.map(option => {
           const priced = Number.isSafeInteger(option.price_coins) && (option.price_coins ?? -1) >= 0;
           return <Button key={option.method} className={styles.price} disabled={!!pending || !priced}
             aria-busy={pending === option.method} onClick={() => open(option.method)}>
-            <span>{pending === option.method ? "Открываем…" : option.method === "series_bundle" ? "Весь сериал" : "Эта серия"}</span>
-            <strong>{priced ? `${option.price_coins} мон.` : "Цена недоступна"}</strong>
+            <span>{pending === option.method ? t("Открываем…", "Unlocking…") : option.method === "series_bundle" ? t("Весь сериал", "Entire series") : t("Эта серия", "This episode")}</span>
+            <strong>{priced ? t(`${option.price_coins} мон.`, `${option.price_coins} ${option.price_coins === 1 ? "coin" : "coins"}`) : t("Цена недоступна", "Price unavailable")}</strong>
           </Button>;
         })}
       </div>}
-      {!options.length && <p className={styles.note}>Сейчас вариантов открытия нет.</p>}
+      {!options.length && <p className={styles.note}>{t("Сейчас вариантов открытия нет.", "No unlock options are available right now.")}</p>}
     </>}
-    {error && <p role="alert" className={styles.error}>{error.message} {error instanceof SonaError && error.code === "insufficient_coins" && <ActionLink href="/shop">Пополнить кошелёк</ActionLink>}</p>}
+    {error && <p role="alert" className={styles.error}>{error instanceof SonaError ? error.message : t("Не удалось открыть серию.", "Could not unlock this episode.")} {error instanceof SonaError && error.code === "insufficient_coins" && <ActionLink href="/shop">{t("Пополнить кошелёк", "Get more coins")}</ActionLink>}</p>}
   </section>;
 }

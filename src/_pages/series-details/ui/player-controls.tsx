@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/shared/i18n/context";
 import { Button } from "@animate-ui/react/primitives/buttons/button";
 import { Captions, Maximize2, Minimize2, Pause, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
@@ -18,6 +19,7 @@ type Props = {
 };
 
 export function PlayerControls({ video, durationHint, episodeNumber, episodeCount, onPrevious, onNext }: Props) {
+  const { t } = useI18n();
   const [playing, setPlaying] = useState(false);
   const [waiting, setWaiting] = useState(true);
   const [muted, setMuted] = useState(false);
@@ -110,18 +112,18 @@ export function PlayerControls({ video, durationHint, episodeNumber, episodeCoun
     if (el) { el.muted = !muted; if (muted && el.volume === 0) el.volume = 1; }
     reveal();
   }
-  const playLabel = ended ? "Смотреть ещё раз" : playing ? "Пауза" : "Воспроизвести";
+  const playLabel = ended ? t("Смотреть ещё раз", "Replay") : playing ? t("Пауза", "Pause") : t("Воспроизвести", "Play");
   const played = duration > 0 ? Math.min(100, elapsed / duration * 100) : 0;
 
-  return <div className={styles.controls} role="group" aria-label="Управление воспроизведением" tabIndex={0}
+  return <div className={styles.controls} role="group" aria-label={t("Управление воспроизведением", "Playback controls")} tabIndex={0}
     onKeyDown={event => {
       const target = event.target as HTMLElement;
       const el = video.current;
       if (!el || event.altKey || event.ctrlKey || event.metaKey || target.closest("select,input")) return;
       const key = event.key.toLowerCase();
-      if (key === "k" || (key === " " && !target.closest("button"))) togglePlay();
-      else if (key === "m") toggleMute();
-      else if (key === "f" && canExpand) void expand();
+      if (key === "k" || event.code === "KeyK" || (key === " " && !target.closest("button"))) togglePlay();
+      else if (key === "m" || event.code === "KeyM") toggleMute();
+      else if ((key === "f" || event.code === "KeyF") && canExpand) void expand();
       else if ((key === "arrowleft" || key === "arrowright") && Number.isFinite(el.duration)) {
         el.currentTime = Math.max(0,Math.min(el.duration,el.currentTime + (key === "arrowleft" ? -5 : 5)));
         reveal();
@@ -130,26 +132,26 @@ export function PlayerControls({ video, durationHint, episodeNumber, episodeCoun
     }} data-visible={visible || !playing || waiting} onPointerMove={event => { if (event.pointerType === "mouse") reveal(); }} onFocus={reveal}>
     <button type="button" className={styles.hit} data-swipe={Boolean(onPrevious || onNext)} tabIndex={-1} aria-label={playLabel} onClick={togglePlay} />
     <span className={styles.episodeBadge}><EpisodeCount current={episodeNumber} total={episodeCount} /></span>
-    {waiting && <div className={styles.buffer}><SonaLoader label="Загружаем видео" /></div>}
+    {waiting && <div className={styles.buffer}><SonaLoader label={t("Загружаем видео", "Loading video")} /></div>}
     {!playing && !waiting && <span className={styles.centerPlay} aria-hidden="true">{ended ? <RotateCcw /> : <Play fill="currentColor" />}</span>}
     <div className={styles.deck}>
       <div className={styles.tools}>
-        <Button className={styles.tool} aria-label={playLabel} title={playLabel + " (K)"} onClick={togglePlay}>{playing ? <Pause fill="currentColor" /> : <Play fill="currentColor" />}</Button>
+        <Button className={styles.tool} aria-label={playLabel} aria-keyshortcuts="K Space" title={playLabel + " (K)"} onClick={togglePlay}>{playing ? <Pause fill="currentColor" /> : <Play fill="currentColor" />}</Button>
         <span className={styles.clock}>{mediaTime(elapsed)} <span>/ {mediaTime(duration)}</span></span>
         <div className={styles.trailingTools}>
           {tracks.length > 0 && <label className={styles.trackPicker}><Captions size={20} aria-hidden="true" />
-            <select aria-label="Субтитры" value={captionIndex} onChange={event => {
+            <select aria-label={t("Субтитры", "Subtitles")} value={captionIndex} onChange={event => {
               const selected = Number(event.target.value);
               tracks.forEach((track, i) => { track.mode = i === selected ? "showing" : "disabled"; });
               setCaptionIndex(selected);
-            }}><option value={-1}>Без субтитров</option>{tracks.map((track, i) => <option value={i} key={i}>{track.label || track.language || `Дорожка ${i + 1}`}</option>)}</select>
+            }}><option value={-1}>{t("Без субтитров", "Subtitles off")}</option>{tracks.map((track, i) => <option value={i} key={i}>{track.label || track.language || t(`Дорожка ${i + 1}`, `Track ${i + 1}`)}</option>)}</select>
           </label>}
-          <Button className={styles.tool} aria-label={muted ? "Включить звук" : "Выключить звук"} title="Звук (M)" onClick={toggleMute}>{muted ? <VolumeX /> : <Volume2 />}</Button>
-          {canExpand && <Button className={styles.tool} aria-label={fullscreen ? "Выйти из полного экрана" : "На весь экран"} title="Полный экран (F)" onClick={expand}>{fullscreen ? <Minimize2 /> : <Maximize2 />}</Button>}
+          <Button className={styles.tool} aria-label={muted ? t("Включить звук", "Unmute") : t("Выключить звук", "Mute")} aria-keyshortcuts="M" title={t("Звук (M)", "Sound (M)")} onClick={toggleMute}>{muted ? <VolumeX /> : <Volume2 />}</Button>
+          {canExpand && <Button className={styles.tool} aria-label={fullscreen ? t("Выйти из полного экрана", "Exit fullscreen") : t("На весь экран", "Enter fullscreen")} aria-keyshortcuts="F" title={t("Полный экран (F)", "Fullscreen (F)")} onClick={expand}>{fullscreen ? <Minimize2 /> : <Maximize2 />}</Button>}
         </div>
       </div>
-      <input type="range" className={styles.seek} aria-label="Позиция в серии" min={0} max={duration > 0 ? duration : 0} step={1} value={Math.min(elapsed, Math.max(duration, 0))}
-        aria-valuetext={`${mediaTime(elapsed)} из ${mediaTime(duration)}`} disabled={duration <= 0} style={{ "--played": `${played}%` } as CSSProperties}
+      <input type="range" className={styles.seek} aria-label={t("Позиция в серии", "Playback position")} min={0} max={duration > 0 ? duration : 0} step={1} value={Math.min(elapsed, Math.max(duration, 0))}
+        aria-valuetext={t(`${mediaTime(elapsed)} из ${mediaTime(duration)}`, `${mediaTime(elapsed)} of ${mediaTime(duration)}`)} disabled={duration <= 0} style={{ "--played": `${played}%` } as CSSProperties}
         onChange={event => {
           const el = video.current;
           const value = Number(event.target.value);

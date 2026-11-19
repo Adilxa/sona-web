@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/shared/i18n/context";
 import { Button } from "@animate-ui/react/primitives/buttons/button";
 import Link from "next/link";
 import * as ToggleGroup from "@animate-ui/react/primitives/radix-ui/toggle-group";
@@ -8,7 +9,7 @@ import { findSeries, loadCollection } from "@/entities/series";
 import { SeriesCard } from "@/entities/series/ui/series-card";
 import { useSession } from "@/entities/session";
 import { useViewingMood } from "@/features/viewing-mood/context";
-import { isViewingMood, matchingMoodTerm, moodOptions, moods } from "@/features/viewing-mood/model";
+import { isViewingMood, matchingMoodTerm, moodOptions, moodCopy } from "@/features/viewing-mood/model";
 import { SonaError } from "@/shared/api/content";
 import { SonaLoader } from "@/shared/ui/sona-loader";
 import styles from "./mood-shelf.module.css";
@@ -38,6 +39,7 @@ async function loadCandidates(request: Candidates, signal: AbortSignal) {
 }
 
 function MoodResults({ guest, viewerId }: { guest: boolean; viewerId: string }) {
+  const { t } = useI18n();
   const { mood } = useViewingMood();
   const [cards, setCards] = useState<Card[]>([]);
   const [request, setRequest] = useState<Candidates>({ ids: [], cursor: "" });
@@ -69,27 +71,29 @@ function MoodResults({ guest, viewerId }: { guest: boolean; viewerId: string }) 
       {results.map(({ card, term }) => <li key={card.id}><SeriesCard item={card} card={card} guest={guest} viewerId={viewerId} termLabel={term?.name} startPlayback /></li>)}
     </ul>}
     {!busy && !failed && !results.length && <p className={styles.empty} role="status">
-      Сериалов здесь пока нет. <Link href="/catalog">Открыть каталог</Link>
+      {t("Сериалов здесь пока нет.", "No series here yet.")} <Link href="/catalog">{t("Открыть каталог", "Browse series")}</Link>
     </p>}
-    {busy && <SonaLoader label="Подбираем сериалы" />}
-    {failed && <div className={styles.feedback}><span role="alert">Не удалось загрузить подборку.</span>
-      <Button className={styles.more} onClick={() => setRequest({ ...request })}>Повторить</Button></div>}
-    {!busy && !failed && more && <Button className={styles.more} onClick={() => setRequest(more)}>Проверить ещё сериалы</Button>}
+    {busy && <SonaLoader label={t("Подбираем сериалы", "Finding series")} />}
+    {failed && <div className={styles.feedback}><span role="alert">{t("Не удалось загрузить подборку.", "Couldn’t load this collection.")}</span>
+      <Button className={styles.more} onClick={() => setRequest({ ...request })}>{t("Повторить", "Try again")}</Button></div>}
+    {!busy && !failed && more && <Button className={styles.more} onClick={() => setRequest(more)}>{t("Проверить ещё сериалы", "Find more series")}</Button>}
   </>;
 }
 
 function MoodHeading({ alternatives = false }: { alternatives?: boolean }) {
+  const { t, locale } = useI18n();
   const { mood, choose } = useViewingMood();
   return <div className={styles.heading}>
-    <h2 id="mood-heading" aria-live="polite">{alternatives ? "Другие сериалы" : moods[mood].shelf}</h2>
-    <ToggleGroup.Root className={styles.options} type="single" value={mood} aria-label="Фильтр по настроению"
+    <h2 id="mood-heading" aria-live="polite">{alternatives ? t("Другие сериалы", "More series") : moodCopy(mood, locale).shelf}</h2>
+    <ToggleGroup.Root className={styles.options} type="single" value={mood} aria-label={t("Фильтр по настроению", "Filter by mood")}
       onValueChange={value => { if (isViewingMood(value)) choose(value); }}>
-      {moodOptions.map(id => <ToggleGroup.Item key={id} value={id}>{moods[id].label}</ToggleGroup.Item>)}
+      {moodOptions.map(id => <ToggleGroup.Item key={id} value={id}>{moodCopy(id, locale).label}</ToggleGroup.Item>)}
     </ToggleGroup.Root>
   </div>;
 }
 
 export function MoodShelf() {
+  const { t, locale } = useI18n();
   const { me, error, reload } = useSession();
   const section = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
@@ -103,8 +107,8 @@ export function MoodShelf() {
   }, []);
   return <section id="mood-shelf" tabIndex={-1} ref={section} className={styles.section} aria-labelledby="mood-heading">
     {(error || !visible || !me) && <MoodHeading />}
-    {error ? <div className={styles.feedback}><span role="alert">{error}</span><Button className={styles.more} onClick={reload}>Повторить</Button></div>
-      : visible && me ? <MoodResults key={JSON.stringify([me.id, me.role, me.locale])} guest={me.role === "guest"} viewerId={me.id} />
-      : <SonaLoader label="Подбираем сериалы" />}
+    {error ? <div className={styles.feedback}><span role="alert">{error}</span><Button className={styles.more} onClick={reload}>{t("Повторить", "Try again")}</Button></div>
+      : visible && me ? <MoodResults key={JSON.stringify([me.id, me.role, locale])} guest={me.role === "guest"} viewerId={me.id} />
+      : <SonaLoader label={t("Подбираем сериалы", "Finding series")} />}
   </section>;
 }

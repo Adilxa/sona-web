@@ -1,3 +1,4 @@
+import { documentLocale, uiText } from "../i18n/model";
 import { getSonaQueryClient, observeContent } from "./query-client";
 import type { components } from "./schema";
 
@@ -31,33 +32,28 @@ export class SonaError extends Error {
     public requestId: string | null,
     public problem?: components["schemas"]["LockedProblem"],
   ) {
-    super(
-      messages[code] ??
-        (status === 429
-          ? "Слишком много запросов. Попробуйте позже."
-          : status >= 500
-            ? "Сервис временно недоступен. Попробуйте ещё раз."
-            : "Не удалось выполнить запрос."),
-    );
+    const fallback = status === 429 ? messages.rate_limited : status >= 500 ? messages.unavailable : messages.unknown;
+    super(uiText(...(messages[code] ?? fallback)));
   }
 }
 
-const messages: Record<string, string> = {
-  invalid_credentials: "Не удалось подтвердить данные для входа.",
-  invalid_request: "Проверьте введённые данные.",
-  attestation_required: "Сервис требует дополнительной проверки устройства. Попробуйте позже.",
-  account_blocked: "Доступ к аккаунту ограничен.",
-  rate_limited: "Слишком много попыток. Попробуйте позже.",
-  unauthorized: "Срок сессии истёк. Войдите снова.",
-  forbidden: "Для этого действия нужен аккаунт.",
-  insufficient_coins: "Недостаточно монет.",
-  locked: "Серия закрыта.",
-  not_found: "Запись не найдена.",
-  registration_required: "Для этого действия войдите в аккаунт.",
-  timezone_change_too_soon: "Часовой пояс пока нельзя изменить. Проверьте дату следующей смены.",
-  reauth_required: "Для удаления выйдите из аккаунта и снова войдите с паролем.",
-  already_signed_in: "В этом браузере уже выполнен вход.",
-  unavailable: "Сервис временно недоступен. Попробуйте позже.",
+const messages: Record<string, [string, string]> = {
+  invalid_credentials: ["Не удалось подтвердить данные для входа.", "We couldn't verify your sign-in details."],
+  invalid_request: ["Проверьте введённые данные.", "Check the details you entered."],
+  attestation_required: ["Сервис требует дополнительной проверки устройства. Попробуйте позже.", "Your device needs an additional check. Try again later."],
+  account_blocked: ["Доступ к аккаунту ограничен.", "Access to this account is restricted."],
+  rate_limited: ["Слишком много попыток. Попробуйте позже.", "Too many attempts. Try again later."],
+  unauthorized: ["Срок сессии истёк. Войдите снова.", "Your session has expired. Sign in again."],
+  forbidden: ["Для этого действия нужен аккаунт.", "You need an account for this action."],
+  insufficient_coins: ["Недостаточно монет.", "You don't have enough coins."],
+  locked: ["Серия закрыта.", "This episode is locked."],
+  not_found: ["Запись не найдена.", "This item could not be found."],
+  registration_required: ["Для этого действия войдите в аккаунт.", "Sign in to continue."],
+  timezone_change_too_soon: ["Часовой пояс пока нельзя изменить. Проверьте дату следующей смены.", "Check when you can change your time zone again."],
+  reauth_required: ["Для удаления выйдите из аккаунта и снова войдите с паролем.", "To delete your account, sign out and sign in again with your password."],
+  already_signed_in: ["В этом браузере уже выполнен вход.", "You're already signed in on this browser."],
+  unavailable: ["Сервис временно недоступен. Попробуйте ещё раз.", "The service is temporarily unavailable. Try again."],
+  unknown: ["Не удалось выполнить запрос.", "The request couldn't be completed."],
 };
 
 export async function requireSuccess(response: Response) {
@@ -92,21 +88,22 @@ export async function ensureSession() {
 
 export function getContent<T = unknown>(path: string, signal?: AbortSignal): Promise<T> {
   const endpoint = path.split("?")[0];
+  const contentLanguage = language || documentLocale();
   const card = /^series\/[\w-]+$/.test(endpoint);
   const discovery = endpoint === "catalog" || endpoint === "search";
   const history = endpoint === "home" || endpoint === "me/continue-watching";
   if (typeof window !== "undefined" && (card || discovery || history)) {
-    return observeContent(["content", contentPartition, endpoint, path], s => readContent<T>(path, s), history ? 10_000 : 30_000, signal);
+    return observeContent(["content", contentPartition, endpoint, contentLanguage, path], s => readContent<T>(path, contentLanguage, s), history ? 10_000 : 30_000, signal);
   }
-  return readContent<T>(path, signal);
+  return readContent<T>(path, contentLanguage, signal);
 }
 
-async function readContent<T>(path: string, signal?: AbortSignal): Promise<T> {
+async function readContent<T>(path: string, contentLanguage: string, signal?: AbortSignal): Promise<T> {
   const read = () =>
     fetch(`/api/content/${path}`, {
       cache: "no-store",
       signal,
-      headers: language ? { "Accept-Language": language } : undefined,
+      headers: { "Accept-Language": contentLanguage },
     });
   let response = await read();
   if (response.status === 401) {

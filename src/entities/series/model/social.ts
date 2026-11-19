@@ -1,5 +1,6 @@
 "use client";
 
+import { uiText } from "@/shared/i18n/model";
 import { skipToken, useMutation, useMutationState, useQuery, useQueryClient } from "@tanstack/react-query";
 import { changeContent, getContent } from "@/shared/api/content";
 import type { components } from "@/shared/api/schema";
@@ -28,7 +29,7 @@ export function useSeriesFavorites(viewer?: string) {
         page.items.forEach(item => ids.add(String(item.series_id)));
         if (!page.page.has_more) break;
         cursor = page.page.next_cursor ?? "";
-        if (!cursor || cursors.has(cursor)) throw Error("Не удалось загрузить следующую страницу избранного.");
+        if (!cursor || cursors.has(cursor)) throw Error(uiText("Не удалось загрузить следующую страницу избранного.", "Couldn’t load the next page of favorites."));
         cursors.add(cursor);
       } while (cursor);
       return [...ids];

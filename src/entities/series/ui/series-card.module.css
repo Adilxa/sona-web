@@ -1,5 +1,5 @@
 .frame { height: 100%; min-width: 0; position: relative; }
-.saveDock { position: absolute; inset-block-start: 2px; inset-inline-end: 2px; z-index: 2; }
+.actionDock { position: absolute; inset-block-start: 2px; inset-inline-end: 2px; z-index: 2; }
 .card, .resume {
   position: relative;
   display: grid;
@@ -22,11 +22,18 @@
   background: var(--surface);
 }
 .art img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
-.card .art:has(.count)::after {
-  content: ""; position: absolute; inset: auto 0 0; height: 48px;
-  background: linear-gradient(0deg, rgb(0 0 0 / 78%), transparent);
-  pointer-events: none;
+.posterMeta {
+  position: absolute; inset: auto 0 0; display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: 3px 8px; padding: 24px 10px 9px; color: white;
+  background: linear-gradient(to bottom, transparent, rgb(3 5 6 / 84%) 23px, rgb(3 5 6 / 92%));
 }
+.posterGenre {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  min-width: 0; max-width: 100%; overflow-wrap: anywhere;
+  font: 720 clamp(14px, 1.15vw, 16px)/1.25 var(--font-ui);
+}
+.posterMeta > span { color: white; }
+.posterGenre + span { margin-inline-start: auto; }
 .copy { min-width: 0; }
 .card .copy { display: grid; align-content: start; gap: 7px; padding: 11px 2px 0; }
 .copy strong {
@@ -44,10 +51,8 @@
   background: rgb(8 12 14 / 85%);
 }
 .count > span { color: white; }
-.card .count { left: 10px; bottom: 8px; padding: 0; border: 0; background: transparent; }
-.card .copy:has(.genre) strong { min-block-size: 2.4em; }
 .resume .count { left: auto; right: 8px; }
-.genre { color: var(--muted); font: 570 12px/1.4 var(--font-ui); overflow-wrap: anywhere; }
+.genre { color: var(--studio-silver); font: 630 clamp(14px, 1.15vw, 16px)/1.35 var(--font-ui); overflow-wrap: anywhere; }
 .access {
   display: inline-flex; align-items: center; justify-content: center;
   color: white; border: 1px solid rgb(255 255 255 / 30%); border-radius: var(--radius-pill);
@@ -85,6 +90,21 @@
 }
 .resume .copy strong { font: 630 clamp(19px, 2vw, 30px)/1.12 var(--font-display); letter-spacing: -.045em; }
 .resume .access { position: static; }
+.pinnable .resume { padding-block-start: 46px; }
+.pin {
+  position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: 5px;
+  min-height: 44px; margin-inline-end: 6px; padding: 0 12px;
+  border: 0; border-radius: var(--radius-pill); background: transparent; color: white;
+  font: 680 12px/1.2 var(--font-ui); cursor: pointer;
+}
+.pin::before {
+  content: ""; position: absolute; z-index: -1; inset: 6px 0;
+  border: 1px solid rgb(255 255 255 / 38%); border-radius: inherit; background: rgb(8 12 14 / 85%);
+}
+.pin:is(:hover,:focus-visible)::before { border-color: white; }
+.pin[aria-pressed="true"] { color: #131017; }
+.pin[aria-pressed="true"]::before { background: var(--studio-ice); border-color: var(--studio-ice); }
+.pin[aria-pressed="true"] svg { fill: currentColor; }
 .resumePlay { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; width: fit-content; margin-top: 4px; color: var(--studio-ice); font: 760 13px/1.3 var(--font-ui); }
 .progress {
   appearance: none; width: min(100%, 190px); height: 4px; display: block;

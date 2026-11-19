@@ -1,0 +1,6 @@
+.language { display: grid; gap: 6px; width: fit-content; color: var(--muted); font: 650 13px/1.4 var(--font-ui); }
+.language select {
+  min-height: 44px; min-width: 125px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--hairline);
+  background: var(--surface); color: var(--text); font: 650 16px/1.4 var(--font-ui); cursor: pointer;
+}
+.language select:focus-visible { outline: 2px solid var(--studio-ice); outline-offset: 3px; }

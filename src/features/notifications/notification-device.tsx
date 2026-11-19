@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/shared/i18n/context";
 import { Button as AnimatedButton } from "@animate-ui/react/primitives/buttons/button";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useSession } from "@/entities/session";
@@ -41,7 +42,15 @@ export function DeviceNotificationSync() {
   return null;
 }
 
+const errorMessages = {
+  blocked: ["Уведомления заблокированы в настройках браузера.", "Notifications are blocked in your browser settings."],
+  permission: ["Разрешение на уведомления не выдано.", "Permission to send notifications was not granted."],
+  sync: ["Не удалось обновить уведомления на этом устройстве.", "Couldn’t refresh notifications on this device."],
+  update: ["Не удалось изменить разрешение на уведомления.", "Couldn’t update notification permissions."],
+} as const;
+
 export function DeviceNotifications() {
+  const { t } = useI18n();
   const { me } = useSession();
   const state = useSyncExternalStore(subscribeDeviceState, deviceState, serverDeviceState);
   const [available, setAvailable] = useState(false);
@@ -51,16 +60,17 @@ export function DeviceNotifications() {
   const working = current === "working";
   const enabled = current === "on";
   const blocked = Notification.permission === "denied";
+  const feedback = errorMessages[state.error ?? "sync"];
   return <div>
-    <h3>Уведомления в этом браузере</h3>
-    {blocked && <p>Чтобы получать уведомления, разрешите их в настройках сайта в браузере.</p>}
-    {current === "error" && <p role="alert">{state.error}</p>}
+    <h3>{t("Уведомления в этом браузере", "Notifications in this browser")}</h3>
+    {blocked && <p>{t("Чтобы получать уведомления, разрешите их в настройках сайта в браузере.", "Allow notifications in your browser’s site settings to receive updates.")}</p>}
+    {current === "error" && <p role="alert">{t(feedback[0], feedback[1])}</p>}
     <AnimatedButton asChild><Button variant="outline" type="button" disabled={working || (blocked && current !== "error")} aria-pressed={enabled} aria-busy={working || undefined}
       onClick={() => {
         if (current === "error") void retryDevicePush(me.id, me.locale);
         else void chooseDevicePush(me.id, me.locale, !enabled);
       }}>
-      {working ? <SonaLoader label="Обновляем…" /> : current === "error" ? "Повторить" : enabled ? "Отключить на устройстве" : "Включить на устройстве"}
+      {working ? <SonaLoader label={t("Обновляем…", "Updating…")} /> : current === "error" ? t("Повторить", "Try again") : enabled ? t("Отключить на устройстве", "Turn off on this device") : t("Включить на устройстве", "Turn on on this device")}
     </Button></AnimatedButton>
   </div>;
 }

@@ -1,0 +1,27 @@
+# Pair with compose.yaml on a host where ports 80 and 443 are available.
+services:
+  traefik:
+    image: traefik:v3.7.19
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: [no-new-privileges:true]
+    ports:
+      - "80:80"
+      - "443:443"
+    command:
+      - --providers.file.filename=/etc/traefik/dynamic/routes.yaml
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.le.acme.email=${ACME_EMAIL:?Set the ACME registration email}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+    volumes:
+      - ./deploy/traefik:/etc/traefik/dynamic:ro
+      - certificates:/letsencrypt
+volumes:
+  certificates:

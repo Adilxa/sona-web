@@ -16,6 +16,8 @@
 .secondary { display:flex; justify-content:space-between; margin-top:16px; flex-wrap:wrap; gap:8px; }
 .secondary button { padding:5px 0; font-size:14px; }
 .error { color:#ffaaa1; }
+.policies { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; color: var(--muted); }
+.policies a { text-underline-offset: 3px; }
 @media(max-width:760px) {
   .scene { grid-template-columns:1fr; gap:26px; min-height:auto; }
   .poster { display:none; background:none; }
@@ -29,3 +31,60 @@
 .methods button[aria-pressed="true"] { color: var(--studio-ink); background: var(--studio-ice); }
 .formWrap label small { color: var(--muted); }
 .submit { min-height: 46px; border-radius: var(--radius-pill); font: 740 15px/1.2 var(--font-ui); }
+
+.scene[data-link-email] {
+  max-width: 68rem;
+  grid-template-columns: minmax(0, 1.1fr) minmax(240px, .9fr);
+  grid-template-areas: "form artwork";
+  align-items: stretch;
+  gap: 0;
+  border: 1px solid var(--hairline);
+  border-radius: 20px;
+  background: var(--surface);
+  overflow: clip;
+}
+.scene[data-link-email] .panel { grid-area: form; padding: clamp(24px, 3.8vw, 46px); }
+.scene[data-link-email] .formWrap { min-width: 0; }
+.scene[data-link-email] .poster {
+  grid-area: artwork; border-radius: 0; min-height: clamp(370px, 44svh, 500px);
+  background-position: 68% 45%;
+}
+.scene[data-link-email] .poster::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--surface) 28%, transparent), transparent 24%);
+}
+.steps {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
+  list-style: none; margin: 0 0 clamp(18px, 2.5vw, 26px); padding: 0;
+}
+.steps li {
+  display: flex; align-items: center; gap: 8px; border-bottom: 2px solid var(--hairline);
+  padding-bottom: 10px; color: var(--muted); font: 660 13px/1.3 var(--font-ui);
+}
+.steps li > span {
+  display: grid; place-items: center; flex: none; width: 22px; height: 22px;
+  border: 1px solid var(--hairline); border-radius: 50%; font-variant-numeric: tabular-nums;
+}
+.steps [aria-current="step"] { color: var(--text); border-color: var(--studio-ice); }
+.steps [aria-current="step"] > span { background: var(--studio-ice); border-color: transparent; color: var(--studio-ink); }
+.steps [data-complete] > span { border-color: var(--studio-ice); color: var(--studio-ice); }
+.scene[data-link-email] .intro { font: 540 15px/1.5 var(--font-ui); }
+.scene[data-link-email] .intro bdi { font-weight: 690; color: var(--text); }
+.scene[data-link-email] input {
+  border-color: var(--hairline); border-radius: 10px; background: var(--canvas); color: var(--text);
+}
+.scene[data-link-email] :is(input, button, a):focus-visible { outline: 2px solid var(--studio-ice); outline-offset: 2px; }
+.scene[data-link-email] .code { min-height: 56px; font: 680 24px/1.2 var(--font-ui); letter-spacing: .32em; font-variant-numeric: tabular-nums; }
+.scene[data-link-email] .code::placeholder { color: var(--muted); opacity: .7; }
+.scene[data-link-email] .submit { background: var(--studio-ice); color: var(--studio-ink); }
+.scene[data-link-email] .secondary { gap: 4px 12px; }
+@media (prefers-reduced-motion: no-preference) {
+  .scene[data-link-email] form { animation: link-form-in .15s ease-out; }
+  .steps li { transition: border-color .16s ease, color .16s ease; }
+  @keyframes link-form-in { from { opacity: .75; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+}
+@media (max-width: 760px) {
+  .scene[data-link-email] { grid-template-columns: minmax(0, 1fr); grid-template-areas: "form"; border-radius: 16px; }
+  .scene[data-link-email] .panel { padding: clamp(16px, 5vw, 24px); }
+  .scene[data-link-email] .formWrap { width: 100%; }
+}

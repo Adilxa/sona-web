@@ -1,3 +1,4 @@
+import { uiText } from "@/shared/i18n/model";
 import { getContent, SonaError } from "@/shared/api/content";
 import type { components, operations } from "@/shared/api/schema";
 
@@ -8,6 +9,7 @@ export type Collection = "catalog" | "feed" | "me/favorites" | "me/continue-watc
 export type CatalogTerm = Schema["TermRef"];
 export type CatalogTile = {
   id: string;
+  slug?: string;
   title: string;
   poster?: string;
   episodesCount?: number;
@@ -31,6 +33,7 @@ export async function findSeries(id: string, signal?: AbortSignal) {
   const landscape = poster(card.cover_horizontal);
   return {
     id: String(card.id),
+    slug: card.slug,
     title: card.title,
     description: card.description,
     poster: poster(card.cover_vertical) ?? landscape,
@@ -46,12 +49,13 @@ export async function findSeries(id: string, signal?: AbortSignal) {
 
 export async function listEpisodes(id: string, _cursor: string, signal?: AbortSignal) {
   const { items } = await getContent<Schema["EpisodeList"]>(`series/${encodeURIComponent(id)}/episodes`, signal);
-  return { items: items.map(ep => ({ ...ep, title: ep.title || `Серия ${ep.number}` })), next: "" };
+  return { items, next: "" };
 }
 
 function briefs(items: Schema["SeriesBrief"][]) {
   return items.map(row => ({
     id: String(row.id),
+    slug: row.slug,
     title: row.title,
     episodesCount: row.episodes_count,
     isVip: row.is_vip,
@@ -80,7 +84,7 @@ async function summaries(collection: Collection, query: string, cursor: string, 
     const data = await getContent<Schema["FeedPage"]>(path, signal);
     return {
       items: data.items.filter(row => row.kind === "series").map(row => ({
-        id: String(row.series_id), title: row.title, poster: row.poster_url,
+        id: String(row.series_id), slug: row.slug, title: row.title, poster: row.poster_url,
       })),
       next: next(data.page),
     };
@@ -104,10 +108,11 @@ export async function loadCollection(collection: Collection, query: string, curs
   if (options.summariesOnly || collection === "feed") return page;
   const items = await Promise.all(page.items.map(async row => {
     try {
-      return { ...row, ...await findSeries(row.id, signal) };
+      const card = await findSeries(row.id, signal);
+      return { ...row, ...card, slug: card.slug || row.slug };
     } catch (err) {
       if (signal?.aborted || (!row.title && !(err instanceof SonaError && err.status === 404))) throw err;
-      return { ...row, title: row.title || `Сериал №${row.id}` };
+      return { ...row, title: row.title || uiText(`Сериал №${row.id}`, `Series #${row.id}`) };
     }
   }));
   return { items, next: page.next };
@@ -119,6 +124,6 @@ export function listSeries(cursor: string, signal?: AbortSignal) {
 
 export async function playback(id: string, signal?: AbortSignal) {
   const data = await getContent<Schema["Playback"]>(`episodes/${encodeURIComponent(id)}/playback`, signal);
-  if (!data.url || new URL(data.url).protocol !== "https:") throw Error("Воспроизведение этой серии сейчас недоступно.");
+  if (!data.url || new URL(data.url).protocol !== "https:") throw Error(uiText("Воспроизведение этой серии сейчас недоступно.", "This episode is currently unavailable."));
   return data;
 }

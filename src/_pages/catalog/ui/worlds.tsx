@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/shared/i18n/context";
 import { Button } from "@animate-ui/react/primitives/buttons/button";
 import { Fade } from "@animate-ui/react/primitives/effects/fade";
 import * as Dialog from "@animate-ui/react/primitives/radix-ui/dialog";
@@ -7,10 +8,12 @@ import { ArrowLeft, ArrowRight, Maximize2, X } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState, type CSSProperties } from "react";
 
-import { worlds } from "../model/studio-worlds";
+import { getWorlds } from "../model/studio-worlds";
 import styles from "./worlds.module.css";
 
 export function Worlds() {
+  const { t } = useI18n();
+  const worlds = getWorlds(t);
   const [active, setActive] = useState(0);
   const opener = useRef<HTMLButtonElement>(null);
   const world = worlds[active];
@@ -22,8 +25,8 @@ export function Worlds() {
   return (
     <section id="worlds" className={styles.gallery} aria-labelledby="world-title">
       <div className={styles.sectionHeading}>
-        <h2 id="world-title" className="section-title">Миры SONA</h2>
-        <span>Концепт-арт студии</span>
+        <h2 id="world-title" className="section-title">{t("Миры SONA", "SONA worlds")}</h2>
+        <span>{t("Концепт-арт студии", "Studio concept art")}</span>
       </div>
       <Dialog.Root>
         <div id="world-gallery" className={styles.reel}>
@@ -33,7 +36,7 @@ export function Worlds() {
                 <Button
                   className={styles.frame}
                   tapScale={0.99}
-                  aria-label={`Открыть кадр «${item.title}»`}
+                  aria-label={t(`Открыть кадр «${item.title}»`, `View still from “${item.title}”`)}
                   onClick={event => {
                     opener.current = event.currentTarget;
                     setActive(index);
@@ -74,7 +77,7 @@ export function Worlds() {
             }}
           >
             <Dialog.Close asChild>
-              <Button className={styles.close} aria-label="Закрыть просмотр"><X size={20} /></Button>
+              <Button className={styles.close} aria-label={t("Закрыть просмотр", "Close viewer")}><X size={20} /></Button>
             </Dialog.Close>
             <Fade key={world.art} className={styles.scene} initialOpacity={0.75}>
               <Image
@@ -90,15 +93,15 @@ export function Worlds() {
                 <span className={styles.genre}>{world.genre}</span>
                 <Dialog.Title>{world.title}</Dialog.Title>
                 <Dialog.Description>{world.line}</Dialog.Description>
-                <aside className={styles.note} aria-label="Заметка студии">
-                  <strong>Заметка студии</strong>
+                <aside className={styles.note} aria-label={t("Заметка студии", "Studio notes")}>
+                  <strong>{t("Заметка студии", "Studio notes")}</strong>
                   <p>{world.note}</p>
                 </aside>
               </div>
               <div className={styles.arrows}>
                 <span>{active + 1} / {worlds.length}</span>
-                <Button aria-label="Предыдущий мир" onClick={() => step(-1)}><ArrowLeft size={19} /></Button>
-                <Button aria-label="Следующий мир" onClick={() => step(1)}><ArrowRight size={19} /></Button>
+                <Button aria-label={t("Предыдущий мир", "Previous world")} onClick={() => step(-1)}><ArrowLeft size={19} /></Button>
+                <Button aria-label={t("Следующий мир", "Next world")} onClick={() => step(1)}><ArrowRight size={19} /></Button>
               </div>
             </div>
           </Dialog.Content>

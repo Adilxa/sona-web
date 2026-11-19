@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/shared/i18n/context";
 import { Button } from "@animate-ui/react/primitives/buttons/button";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { changeContent } from "@/shared/api/content";
@@ -118,9 +119,10 @@ export function Player({ stream, episodeCount, warmer, warmed, nextToWarm, posit
   onPrevious?: () => void;
   onNext?: () => void;
 }) {
+  const { t } = useI18n();
   const video = useRef<HTMLVideoElement>(null);
   const usingHlsJs = useRef(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(false);
   const [progressError, setProgressError] = useState(false);
   const finish = useEffectEvent(onFinish);
   const restart = useEffectEvent(onRestart);
@@ -224,7 +226,7 @@ export function Player({ stream, episodeCount, warmer, warmed, nextToWarm, posit
     const metadata = () => {
       if (position > 0 && Number.isFinite(element.duration) && position < element.duration) element.currentTime = position;
     };
-    const failure = () => { if (!closed) setError("Не удалось загрузить видео."); };
+    const failure = () => { if (!closed) setError(true); };
     element.addEventListener("loadedmetadata", metadata, { once: true });
     element.addEventListener("ended", end);
     element.addEventListener("error", failure);
@@ -297,13 +299,13 @@ export function Player({ stream, episodeCount, warmer, warmed, nextToWarm, posit
   }, [stream, position, warmed]);
 
   return <div className={styles.cinema}>
-    <video ref={video} autoPlay playsInline muted={muted} onVolumeChange={event => onMute(event.currentTarget.muted)} preload="metadata" poster={stream.poster_url} aria-label={`Серия ${stream.number}`}
+    <video ref={video} autoPlay playsInline muted={muted} onVolumeChange={event => onMute(event.currentTarget.muted)} preload="metadata" poster={stream.poster_url} aria-label={t(`Серия ${stream.number}`, `Episode ${stream.number}`)}
       crossOrigin={stream.subtitles?.length ? "anonymous" : undefined}>
       {stream.subtitles?.filter(track => track.url.startsWith("https://")).map(track =>
         <track key={track.lang} kind="subtitles" src={track.url} srcLang={track.lang} label={track.lang.toUpperCase()} />)}
     </video>
     {!error && <PlayerControls video={video} durationHint={stream.duration_sec} episodeNumber={stream.number} episodeCount={episodeCount} onPrevious={onPrevious} onNext={onNext} />}
-    {error && <div role="alert" className={styles.overlay}><p>{error}</p><Button onClick={() => onRetry(Math.floor(video.current?.currentTime || position))}>Загрузить видео ещё раз</Button></div>}
-    {progressError && !error && <small role="status" className={styles.progressError}>Не удалось сохранить позицию</small>}
+    {error && <div role="alert" className={styles.overlay}><p>{t("Не удалось загрузить видео.", "The video could not be loaded.")}</p><Button onClick={() => onRetry(Math.floor(video.current?.currentTime || position))}>{t("Загрузить видео ещё раз", "Retry video")}</Button></div>}
+    {progressError && !error && <small role="status" className={styles.progressError}>{t("Не удалось сохранить позицию", "Could not save your progress")}</small>}
   </div>;
 }

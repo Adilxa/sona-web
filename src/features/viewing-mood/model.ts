@@ -31,3 +31,13 @@ export function matchingMoodTerm(mood: ViewingMood, card: { genres: CatalogTerm[
   const accepted: readonly string[] = moods[mood].terms;
   return [...card.genres, ...card.tags].find(term => [term.slug, term.name].some(value => accepted.includes(normalizeTerm(value))));
 }
+
+const englishCopy = {
+  joy: { label: "Cheerful", headline: "to lift your mood", shelf: "Feel-good picks" },
+  thrill: { label: "Thrilling", headline: "for the thrill", shelf: "Edge-of-your-seat series" },
+  wistful: { label: "Melancholy", headline: "for a good cry", shelf: "Moving stories" },
+} as const;
+
+export function moodCopy(mood: ViewingMood, locale: "ru" | "en") {
+  return locale === "en" ? englishCopy[mood] : moods[mood];
+}

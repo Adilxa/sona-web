@@ -1,4 +1,6 @@
-import { CatalogPage } from "./ui/catalog-page";
+import { Suspense } from "react";
+import { EmbeddedCatalogFallback } from "./ui/catalog-page";
+import { PublicCatalog } from "./ui/public-catalog";
 import { HomeBlocks } from "./ui/home-blocks";
 import { ScreeningRoom } from "./ui/studio-intro";
 import { MoodShelf } from "./ui/mood-shelf";
@@ -10,7 +12,9 @@ export function HomePage() {
     <div className={styles.library}>
       <MoodShelf />
       <HomeBlocks />
-      <CatalogPage embedded initialCollection="catalog" title="Все сериалы" />
+      <Suspense fallback={<EmbeddedCatalogFallback />}>
+        <PublicCatalog embedded />
+      </Suspense>
     </div>
   </div>;
 }

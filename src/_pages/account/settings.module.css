@@ -1,0 +1,40 @@
+.form {
+  display: grid;
+  gap: 18px;
+  max-width: 32rem;
+}
+.field { display: grid; gap: 7px; min-width: 0; }
+.field > label, .custom {
+  color: var(--studio-silver);
+  font: 650 14px/1.35 var(--font-ui);
+}
+.control { position: relative; min-width: 0; }
+.control select, .field input {
+  color-scheme: dark;
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 40px 10px 13px;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: 560 16px/1.35 var(--font-ui);
+}
+.control select { appearance: none; cursor: pointer; text-overflow: ellipsis; }
+.control svg {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  pointer-events: none; color: var(--studio-silver);
+}
+.control select:disabled { color: var(--muted); cursor: default; opacity: 1; }
+.control select:focus-visible, .field input:focus-visible { outline: 2px solid var(--studio-ice); outline-offset: 2px; }
+.custom { display: grid; gap: 6px; }
+.field input { padding-right: 13px; }
+.hint { font: 520 13px/1.45 var(--font-ui); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.actions span { font: 600 13px/1.35 var(--font-ui); color: var(--studio-silver); }
+.error { margin: 0; font: 560 14px/1.45 var(--font-ui); }
+@media (forced-colors: active) {
+  .control select { appearance: auto; }
+  .control svg { display: none; }
+}

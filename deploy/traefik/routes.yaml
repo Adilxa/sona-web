@@ -1,0 +1,26 @@
+http:
+  routers:
+    sona-web:
+      rule: Host(`sona-ai.watch`)
+      entryPoints: [websecure]
+      tls:
+        certResolver: le
+      service: sona-web
+    sona-web-www:
+      rule: Host(`www.sona-ai.watch`)
+      entryPoints: [websecure]
+      tls:
+        certResolver: le
+      middlewares: [sona-web-canonical]
+      service: sona-web
+  middlewares:
+    sona-web-canonical:
+      redirectRegex:
+        regex: '^https?://[^/]+/(.*)$'
+        replacement: 'https://sona-ai.watch/${1}'
+        permanent: true
+  services:
+    sona-web:
+      loadBalancer:
+        servers:
+          - url: http://web:3000

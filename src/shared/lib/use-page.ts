@@ -1,5 +1,6 @@
 "use client";
 
+import { uiText } from "../i18n/model";
 import { useEffect, useState } from "react";
 
 export function usePage<T>(load: (cursor: string, signal: AbortSignal) => Promise<{items: T[]; next: string}>) {
@@ -18,7 +19,7 @@ export function usePage<T>(load: (cursor: string, signal: AbortSignal) => Promis
       setItems(previous => cursor ? [...previous, ...result.items] : result.items);
       setNext(result.next);
     }).catch((e) => {
-      if (!controller.signal.aborted) setError(e instanceof Error ? e.message : "Не удалось загрузить данные.");
+      if (!controller.signal.aborted) setError(e instanceof Error ? e.message : uiText("Не удалось загрузить данные.", "Couldn’t load the data."));
     }).finally(() => {
       if (!controller.signal.aborted) setBusy(false);
     });

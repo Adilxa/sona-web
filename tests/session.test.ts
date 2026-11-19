@@ -26,6 +26,27 @@ function request(path: string, body?: unknown, cookie = "", extra?: Record<strin
 }
 const ctx = (action: string) => ({ params: Promise.resolve({ action: action.split("/") }) });
 
+test("the TLS proxy uses the public origin and sets secure cookies", async (t) => {
+  const previous = process.env.SONA_SITE_ORIGIN;
+  process.env.SONA_SITE_ORIGIN = "https://sona-ai.watch";
+  t.after(() => {
+    if (previous === undefined) delete process.env.SONA_SITE_ORIGIN;
+    else process.env.SONA_SITE_ORIGIN = previous;
+  });
+  const upstream = t.mock.method(globalThis, "fetch", async () => Response.json(fakePair));
+  const behindProxy = (originHeader: string) => new NextRequest("http://web:3000/api/session", {
+    method: "POST",
+    headers: { Origin: originHeader, "Content-Type": "application/json" },
+    body: JSON.stringify({ deviceId: device.device_id, timezone: "UTC" }),
+  });
+  const response = await session(behindProxy("https://sona-ai.watch"));
+  assert.equal(response.status, 204);
+  assert.equal(response.headers.getSetCookie().length, 2);
+  for (const cookie of response.headers.getSetCookie()) assert.match(cookie, /;\s*Secure/i);
+  assert.equal((await session(behindProxy("http://web:3000"))).status, 403);
+  assert.equal(upstream.mock.callCount(), 1);
+});
+
 test("verification preserves the guest, leading zeroes and HttpOnly cookie scopes", async (t) => {
   const upstream = t.mock.method(globalThis, "fetch", async (url: URL, options: RequestInit) => {
     if (url.pathname === "/v1/me") {

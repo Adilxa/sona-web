@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { components } from "./schema";
+import { configuredSiteOrigin } from "../config/site-origin";
 
 export function sameOrigin(request: NextRequest) {
   const site = request.headers.get("sec-fetch-site");
-  if (site === "same-origin") return true;
-  return request.headers.get("origin") === request.nextUrl.origin && site !== "cross-site";
+  if (site === "cross-site") return false;
+  const origin = request.headers.get("origin");
+  const publicOrigin = configuredSiteOrigin();
+  if (publicOrigin && origin) return origin === publicOrigin;
+  return site === "same-origin" || origin === request.nextUrl.origin;
 }
 
 export function upstreamHeaders(source: Response) {
@@ -25,6 +29,7 @@ export function sessionCookies(
   response: NextResponse,
   pair: components["schemas"]["TokenPair"] | null,
 ) {
+  const secure = configuredSiteOrigin()?.startsWith("https://") || request.nextUrl.protocol === "https:";
   for (const [name, path, token, expiry] of [
     ["sona_access", "/api", pair?.access_token, pair?.access_expires_at],
     ["sona_refresh", "/api/session", pair?.refresh_token, pair?.refresh_expires_at],
@@ -42,7 +47,7 @@ export function sessionCookies(
       path,
       httpOnly: true,
       sameSite: "strict",
-      secure: request.nextUrl.protocol === "https:",
+      secure,
     });
   }
   response.headers.set("Cache-Control", "private, no-store");

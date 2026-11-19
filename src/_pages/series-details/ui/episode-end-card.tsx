@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/shared/i18n/context";
 import { Button } from "@animate-ui/react/primitives/buttons/button";
 import { LockKeyhole, Play, RotateCcw } from "lucide-react";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export function EpisodeEndCard({ next, completedSeries, sheetOpen, swiped, onNext, onReplay }: Props) {
+  const { t } = useI18n();
   const [clock] = useState(() => new PlaybackCountdown());
   const [seconds, setSeconds] = useState(10);
   const [cancelled, setCancelled] = useState(false);
@@ -66,21 +68,21 @@ export function EpisodeEndCard({ next, completedSeries, sheetOpen, swiped, onNex
     onReplay();
   }
 
-  return <section className={styles.endCard} aria-label="После серии">
+  return <section className={styles.endCard} aria-label={t("После серии", "After the episode")}>
     <div className={styles.endHeading}>
-      <strong>{next ? `Далее · серия ${next.number}` : completedSeries ? "Вы досмотрели сериал" : "Пока это последняя серия"}</strong>
-      {next && <Button className={styles.repeatIcon} aria-label="Повторить серию" onClick={replay}><RotateCcw size={17} /></Button>}
+      <strong>{next ? t(`Далее · серия ${next.number}`, `Up next · Episode ${next.number}`) : completedSeries ? t("Вы досмотрели сериал", "You’ve finished the series") : t("Пока это последняя серия", "You’re caught up")}</strong>
+      {next && <Button className={styles.repeatIcon} aria-label={t("Повторить серию", "Replay episode")} onClick={replay}><RotateCcw size={17} /></Button>}
     </div>
-    {next && auto && <span role="timer" className={styles.timer}>Начнётся через {seconds} с</span>}
-    {next?.locked && <span className={styles.timer}><LockKeyhole size={14} /> Серия закрыта</span>}
+    {next && auto && <span role="timer" className={styles.timer}>{t(`Начнётся через ${seconds} с`, `Starts in ${seconds}s`)}</span>}
+    {next?.locked && <span className={styles.timer}><LockKeyhole size={14} /> {t("Серия закрыта", "Episode locked")}</span>}
     <div className={styles.endActions}>
       {next ? <>
         <Button className={styles.endPrimary} onClick={advance}>
           {next.locked ? <LockKeyhole size={15} /> : <Play size={15} fill="currentColor" />}
-          {next.locked ? "Варианты доступа" : "Смотреть сейчас"}
+          {next.locked ? t("Варианты доступа", "Unlock options") : t("Смотреть сейчас", "Watch now")}
         </Button>
-        {auto && <Button className={styles.cancelNext} onClick={cancel}>Отмена</Button>}
-      </> : <Button className={styles.endPrimary} onClick={replay}><RotateCcw size={15} /> Повторить серию</Button>}
+        {auto && <Button className={styles.cancelNext} onClick={cancel}>{t("Отмена", "Cancel")}</Button>}
+      </> : <Button className={styles.endPrimary} onClick={replay}><RotateCcw size={15} /> {t("Повторить серию", "Replay episode")}</Button>}
     </div>
   </section>;
 }

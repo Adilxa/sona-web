@@ -1,0 +1,32 @@
+# Pair with compose.yaml when a Docker-provider Traefik already owns ports 80 and 443.
+services:
+  web:
+    networks: [proxy]
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: ${TRAEFIK_NETWORK:?Set the existing Traefik network}
+      traefik.http.routers.sona-web-http.rule: Host(`sona-ai.watch`) || Host(`www.sona-ai.watch`)
+      traefik.http.routers.sona-web-http.entrypoints: ${TRAEFIK_HTTP_ENTRYPOINT:-web}
+      traefik.http.routers.sona-web-http.middlewares: sona-web-https
+      traefik.http.routers.sona-web-http.service: sona-web
+      traefik.http.middlewares.sona-web-https.redirectscheme.scheme: https
+      traefik.http.middlewares.sona-web-https.redirectscheme.permanent: "true"
+      traefik.http.routers.sona-web.rule: Host(`sona-ai.watch`)
+      traefik.http.routers.sona-web.entrypoints: ${TRAEFIK_HTTPS_ENTRYPOINT:-websecure}
+      traefik.http.routers.sona-web.tls: "true"
+      traefik.http.routers.sona-web.tls.certresolver: ${TRAEFIK_CERT_RESOLVER:?Set the existing Traefik certificate resolver}
+      traefik.http.routers.sona-web.service: sona-web
+      traefik.http.routers.sona-web-www.rule: Host(`www.sona-ai.watch`)
+      traefik.http.routers.sona-web-www.entrypoints: ${TRAEFIK_HTTPS_ENTRYPOINT:-websecure}
+      traefik.http.routers.sona-web-www.tls: "true"
+      traefik.http.routers.sona-web-www.tls.certresolver: ${TRAEFIK_CERT_RESOLVER:?Set the existing Traefik certificate resolver}
+      traefik.http.routers.sona-web-www.middlewares: sona-web-canonical
+      traefik.http.routers.sona-web-www.service: sona-web
+      traefik.http.middlewares.sona-web-canonical.redirectregex.regex: '^https?://[^/]+/(.*)$'
+      traefik.http.middlewares.sona-web-canonical.redirectregex.replacement: 'https://sona-ai.watch/$${1}'
+      traefik.http.middlewares.sona-web-canonical.redirectregex.permanent: "true"
+      traefik.http.services.sona-web.loadbalancer.server.port: "3000"
+networks:
+  proxy:
+    name: ${TRAEFIK_NETWORK:?Set the existing Traefik network}
+    external: true

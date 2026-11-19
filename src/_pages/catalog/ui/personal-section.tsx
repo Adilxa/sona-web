@@ -1,18 +1,20 @@
 "use client";
 
+import { useI18n } from "@/shared/i18n/context";
 import { ArrowRight, ArrowUpRight, Bookmark, Clock3, Coins, Flame } from "lucide-react";
 import { useSession } from "@/entities/session";
 import { ActionLink } from "@/shared/ui/action-link";
 import styles from "./personal-section.module.css";
 
-const destinations = [
-  { href: "/history", name: "История просмотра", detail: "Вернуться к начатой серии", icon: Clock3 },
-  { href: "/favorites", name: "Избранное", detail: "Сериалы, отложенные на потом", icon: Bookmark },
-  { href: "/rewards", name: "Ежедневные награды", detail: "Отметки и бонусные монеты", icon: Flame },
-  { href: "/wallet", name: "Кошелёк", detail: "Баланс и история операций", icon: Coins },
-];
-
 export function PersonalSection() {
+  const { t } = useI18n();
+  const destinations = [
+    { href: "/history", name: t("История просмотра", "Watch history"), detail: t("Вернуться к начатой серии", "Pick up where you left off"), icon: Clock3 },
+    { href: "/favorites", name: t("Избранное", "Favorites"), detail: t("Сериалы, отложенные на потом", "Series saved for later"), icon: Bookmark },
+    { href: "/rewards", name: t("Ежедневные награды", "Daily rewards"), detail: t("Отметки и бонусные монеты", "Check-ins and bonus coins"), icon: Flame },
+    { href: "/wallet", name: t("Кошелёк", "Wallet"), detail: t("Баланс и история операций", "Balance and transactions"), icon: Coins },
+  ];
+
   const { me } = useSession();
   const registered = me?.role === "user";
 
@@ -29,12 +31,12 @@ export function PersonalSection() {
           alt=""
         />
         <h2 id="collection-heading">
-          Мой
+          {t("Мой", "My")}
           <br />
-          кинотеатр
+          {t("кинотеатр", "cinema")}
         </h2>
         <ActionLink className={styles.account} href={registered ? "/profile" : "/login"}>
-          {registered ? "Открыть профиль" : "Войти в SONA"} <ArrowUpRight size={18} aria-hidden="true" />
+          {registered ? t("Открыть профиль", "Open profile") : t("Войти в SONA", "Sign in to SONA")} <ArrowUpRight size={18} aria-hidden="true" />
         </ActionLink>
       </div>
       <nav className={styles.destinations} aria-labelledby="collection-heading">

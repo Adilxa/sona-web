@@ -1,0 +1,8 @@
+.page { max-width: 800px; }
+.section { padding-block: clamp(16px, 2.4vw, 26px); border-bottom: 1px solid var(--hairline); }
+.section:first-of-type { padding-top: 0; }
+.section h2 { margin: 0 0 10px; font: 650 clamp(19px, 2.1vw, 27px)/1.18 var(--font-display); letter-spacing: -.035em; }
+.section p { margin: 0; max-width: 70ch; line-height: 1.65; color: var(--studio-silver); }
+.section p + p { margin-top: 8px; }
+.section a { color: var(--studio-ice); text-decoration-thickness: 1px; text-underline-offset: .23em; overflow-wrap: anywhere; }
+.section > a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 650; }

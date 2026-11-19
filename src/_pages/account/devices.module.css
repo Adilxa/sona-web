@@ -1,0 +1,46 @@
+.list { min-width: 0; }
+.list .zone { margin: 0 0 12px; color: var(--muted); font: 560 13px/1.4 var(--font-ui); overflow-wrap: anywhere; }
+.list > ul { display: grid; gap: 9px; }
+.list > ul > li { display: block; min-height: 0; padding: 0; border: 0; }
+.list > ul > li:last-child { border-bottom: 0; }
+.card {
+  display: grid; grid-template-columns: minmax(130px,.65fr) minmax(0,1.8fr) auto;
+  align-items: center; gap: 13px 20px; min-width: 0; padding: clamp(15px,2vw,23px);
+  background: var(--surface); border: 1px solid var(--hairline); border-radius: 15px;
+}
+.card[data-current=true] { border-color: color-mix(in srgb,var(--studio-ice) 33%,var(--hairline)); }
+.identity { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.icon { width: 41px; height: 41px; flex: none; display: grid; place-items: center;
+  color: var(--studio-silver); background: var(--card); border-radius: 12px; }
+.card[data-current=true] .icon { color: var(--studio-ice); background: color-mix(in srgb,var(--studio-ice) 11%,var(--surface)); }
+.card .identity h2 { margin: 0; font: 710 16px/1.3 var(--font-ui); letter-spacing: -.025em; overflow-wrap: anywhere; }
+.here { margin-top: 3px; display: inline-flex; align-items: center; gap: 5px;
+  font: 620 12px/1.25 var(--font-ui); color: var(--studio-ice); }
+.here > span { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.facts { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)) minmax(66px,.7fr); align-items: start; gap: 8px; margin: 0; }
+.facts > div { min-width: 0; }
+.facts dt { color: var(--muted); font: 570 12px/1.35 var(--font-ui); }
+.facts dd { margin: 4px 0 0; color: var(--text); font: 630 14px/1.4 var(--font-ui); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.card .end { justify-self: end; white-space: normal; }
+.confirm { grid-column: 1/-1; min-width: 0; border-top: 1px solid var(--hairline); padding-top: 13px; }
+.confirm > strong { color: var(--text); font: 730 15px/1.35 var(--font-ui); }
+.confirm > p { margin: 4px 0; color: var(--muted); font: 550 14px/1.4 var(--font-ui); }
+.actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+.actions .apply { color: var(--text); border-color: color-mix(in srgb,var(--coral) 50%,var(--hairline)); }
+.actions .apply:not(:disabled):hover { color: var(--text); border-color: var(--coral); }
+.confirm .error { margin-top: 8px; color: var(--text); }
+.list .notice { display: block; margin: 0 0 12px; color: var(--studio-ice); font: 650 14px/1.4 var(--font-ui); }
+@media (max-width: 850px) {
+  .card { grid-template-columns: minmax(0,1fr) auto; }
+  .identity { grid-area: 1/1; }
+  .card .end { grid-area: 1/2; }
+  .facts { grid-column: 1/-1; }
+}
+@media (max-width: 550px) {
+  .card { grid-template-columns: minmax(0,1fr); gap: 13px; }
+  .identity,.card .end { grid-area: auto; }
+  .card .end { justify-self: start; }
+  .facts { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px 12px; }
+  .facts > div:last-child { grid-column: 1/-1; display: flex; align-items: baseline; gap: 6px; }
+  .facts > div:last-child dd { margin: 0; }
+}

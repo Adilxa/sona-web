@@ -1,3 +1,4 @@
+import { useI18n } from "@/shared/i18n/context";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import { loadCollection, type CatalogTile } from "@/entities/series";
@@ -30,13 +31,16 @@ export function matchCatalogTitles(query: string, pages: readonly { items: Catal
 export function mergeSearchMatches(ranked: CatalogTile[], suggested: CatalogTile[]) {
   const merged = new Map<string, CatalogTile>();
   for (const item of [...ranked, ...suggested]) {
-    if (!merged.has(item.id)) merged.set(item.id, item);
+    const previous = merged.get(item.id);
+    if (!previous) merged.set(item.id, item);
+    else if (!previous.slug && item.slug) merged.set(item.id, { ...previous, slug: item.slug });
   }
   return [...merged.values()];
 }
 
 export function useCatalogSuggestions(query: string, viewer: string | undefined, locale: string | undefined,
   ready: boolean, ranked: CatalogTile[]) {
+  const { t } = useI18n();
   const catalog = useInfiniteQuery({
     // Changing the text keeps the same brief pages. Closing the search drops its observer and cancels pending work.
     queryKey: ["series-search", "catalog", viewer ?? null, locale ?? null],
@@ -58,7 +62,7 @@ export function useCatalogSuggestions(query: string, viewer: string | undefined,
   return {
     items,
     pending: !isError && (catalog.isPending || isFetching || more),
-    error: catalog.error?.message || (repeatedCursor ? "Не удалось загрузить каталог полностью." : undefined),
+    error: catalog.error?.message || (repeatedCursor ? t("Не удалось загрузить каталог полностью.", "Couldn’t load the full catalog.") : undefined),
     retry: () => catalog.isFetchNextPageError ? fetchNextPage() : catalog.refetch(),
   };
 }
